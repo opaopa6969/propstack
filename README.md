@@ -1,5 +1,10 @@
 # PropStack
 
+[![Maven Central](https://img.shields.io/maven-central/v/org.unlaxer/propstack)](https://central.sonatype.com/artifact/org.unlaxer/propstack)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Java 21+](https://img.shields.io/badge/Java-21%2B-blue)](https://openjdk.org/)
+[![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)]()
+
 [English](README.md) | [Japanese (日本語)](README.ja.md)
 
 **Stackable property resolver + component registry for Java. No DI. No annotations. No proxies.**
@@ -74,9 +79,11 @@ It also includes `Registry` — a minimal component registry for people who don'
 <dependency>
     <groupId>org.unlaxer</groupId>
     <artifactId>propstack</artifactId>
-    <version>0.9.0</version>
+    <version><!-- see badge above --></version>
 </dependency>
 ```
+
+> Check the latest version on [Maven Central](https://central.sonatype.com/artifact/org.unlaxer/propstack).
 
 ### Basic
 

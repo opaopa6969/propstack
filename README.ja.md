@@ -1,5 +1,10 @@
 # PropStack
 
+[![Maven Central](https://img.shields.io/maven-central/v/org.unlaxer/propstack)](https://central.sonatype.com/artifact/org.unlaxer/propstack)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Java 21+](https://img.shields.io/badge/Java-21%2B-blue)](https://openjdk.org/)
+[![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)]()
+
 [English](README.md) | [Japanese (日本語)](README.ja.md)
 
 **Java 用スタック型プロパティリゾルバ + コンポーネントレジストリ。DI 不要。アノテーション不要。プロキシ不要。**
@@ -74,9 +79,11 @@ System.out.print(props.dump(Db.class));
 <dependency>
     <groupId>org.unlaxer</groupId>
     <artifactId>propstack</artifactId>
-    <version>0.9.0</version>
+    <version><!-- 上のバッジを参照 --></version>
 </dependency>
 ```
+
+> 最新バージョンは [Maven Central](https://central.sonatype.com/artifact/org.unlaxer/propstack) で確認。
 
 ### 基本
 
