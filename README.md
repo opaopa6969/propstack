@@ -1,5 +1,7 @@
 # PropStack
 
+[English](README.md) | [Japanese (日本語)](README.ja.md)
+
 **Stackable property resolver + component registry for Java. No DI. No annotations. No proxies.**
 
 ```java
