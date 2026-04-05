@@ -8,10 +8,10 @@ class TypedKeyTest {
 
     enum Smtp implements KeyHolder {
         HOST(TypedKey.string("SMTP_HOST")),
-        PORT(TypedKey.integer("SMTP_PORT", 587)),
+        PORT(TypedKey.integer("SMTP_PORT").defaultsTo(587)),
         USER(TypedKey.string("SMTP_USER")),
-        FROM(TypedKey.string("SMTP_FROM", "noreply@example.com")),
-        TLS(TypedKey.bool("SMTP_TLS", true));
+        FROM(TypedKey.string("SMTP_FROM").defaultsTo("noreply@example.com")),
+        TLS(TypedKey.bool("SMTP_TLS").defaultsTo(true));
 
         private final TypedKey<?> key;
         Smtp(TypedKey<?> key) { this.key = key; }
@@ -19,8 +19,8 @@ class TypedKeyTest {
     }
 
     enum Db implements KeyHolder {
-        HOST(TypedKey.string("DB_HOST", "localhost")),
-        PORT(TypedKey.integer("DB_PORT", 5432)),
+        HOST(TypedKey.string("DB_HOST").defaultsTo("localhost")),
+        PORT(TypedKey.integer("DB_PORT").defaultsTo(5432)),
         NAME(TypedKey.string("DB_NAME"));
 
         private final TypedKey<?> key;
@@ -105,14 +105,14 @@ class TypedKeyTest {
     void directTypedKey() {
         PropStack props = new PropStack(false);
         props.set("MY_TIMEOUT", "3000");
-        TypedKey<Long> timeout = TypedKey.longKey("MY_TIMEOUT", 5000L);
+        TypedKey<Long> timeout = TypedKey.longKey("MY_TIMEOUT").defaultsTo(5000L);
         assertEquals(3000L, (long) props.get(timeout));
     }
 
     @Test
     void directTypedKeyDefault() {
         PropStack props = new PropStack(false);
-        TypedKey<Double> rate = TypedKey.doubleKey("RATE", 0.05);
+        TypedKey<Double> rate = TypedKey.doubleKey("RATE").defaultsTo(0.05);
         assertEquals(0.05, props.get(rate), 0.001);
     }
 }

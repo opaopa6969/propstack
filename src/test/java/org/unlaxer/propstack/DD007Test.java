@@ -14,10 +14,10 @@ class DD007Test {
 
     enum Smtp implements KeyHolder {
         HOST(TypedKey.string("SMTP_HOST")),
-        PORT(TypedKey.integer("SMTP_PORT", 587)),
+        PORT(TypedKey.integer("SMTP_PORT").defaultsTo(587)),
         USER(TypedKey.string("SMTP_USER")),
         PASSWORD(TypedKey.secret("SMTP_PASSWORD")),
-        FROM(TypedKey.string("SMTP_FROM", "noreply@example.com"));
+        FROM(TypedKey.string("SMTP_FROM").defaultsTo("noreply@example.com"));
 
         private final TypedKey<?> key;
         Smtp(TypedKey<?> key) { this.key = key; }
@@ -26,7 +26,7 @@ class DD007Test {
 
     enum App implements KeyHolder {
         ORIGINS(TypedKey.stringList("ALLOWED_ORIGINS")),
-        TAGS(TypedKey.stringList("TAGS", List.of("default")));
+        TAGS(TypedKey.stringList("TAGS").defaultsTo(List.of("default")));
 
         private final TypedKey<?> key;
         App(TypedKey<?> key) { this.key = key; }

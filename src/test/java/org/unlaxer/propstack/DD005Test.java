@@ -13,7 +13,7 @@ class DD005Test {
 
     enum Smtp implements KeyHolder {
         HOST(TypedKey.string("SMTP_HOST")),
-        PORT(TypedKey.integer("SMTP_PORT", 587)),
+        PORT(TypedKey.integer("SMTP_PORT").defaultsTo(587)),
         USER(TypedKey.string("SMTP_USER"));
 
         private final TypedKey<?> key;
@@ -22,7 +22,7 @@ class DD005Test {
     }
 
     enum Db implements KeyHolder {
-        HOST(TypedKey.string("DB_HOST", "localhost")),
+        HOST(TypedKey.string("DB_HOST").defaultsTo("localhost")),
         NAME(TypedKey.string("DB_NAME"));
 
         private final TypedKey<?> key;
