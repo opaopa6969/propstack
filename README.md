@@ -5,17 +5,23 @@
 **Stackable property resolver + component registry for Java. No DI. No annotations. No proxies.**
 
 ```java
-enum Config implements PropertyKey {
-    DB_HOST, DB_PORT, DB_NAME;
-    public String key() { return name(); }
+enum Db implements KeyHolder {
+    HOST(TypedKey.string("DB_HOST", "localhost")),
+    PORT(TypedKey.integer("DB_PORT", 5432)),
+    NAME(TypedKey.string("DB_NAME"));
+
+    private final TypedKey<?> key;
+    Db(TypedKey<?> key) { this.key = key; }
+    public TypedKey<?> typedKey() { return key; }
 }
 
 PropStack props = new PropStack();
-String host = props.require(Config.DB_HOST);
-int port = props.getInt(Config.DB_PORT);
+String host = props.get(Db.HOST);     // String — type-safe
+int port = props.get(Db.PORT);        // int — type-safe
+String name = props.require(Db.NAME); // throws if missing
 ```
 
-Type-safe. Stackable. Zero dependencies.
+Type-safe. Stackable. Grouped by feature. Zero dependencies.
 
 ## Why?
 
@@ -36,6 +42,8 @@ It also includes `Registry` — a minimal component registry for people who don'
 | `PropStack` | Stackable property resolver |
 | `Registry` | Named + typed component registry |
 | `RegistryKey<T>` | Interface for type-safe catalog enums |
+| `TypedKey<T>` | Type-safe property key with default value |
+| `KeyHolder` | Interface for enums that hold TypedKey |
 | `PropertySource` | Pluggable property source interface |
 | `ApplicationProperties` | Backward-compatible alias for PropStack |
 | `Singletons` | Backward-compatible alias for Registry |
@@ -278,6 +286,14 @@ Registry
       ├── "com.example.DataSource#PROD"         → by RegistryKey
       └── "myCustomName"                        → by string
 ```
+
+## Design Decisions
+
+See [docs/design-decisions.md](docs/design-decisions.md) for the full record of architectural choices, including:
+- DD-001: Why not DI?
+- DD-002: Naming
+- DD-003: TypedKey enum pattern
+- DD-004: No object construction in PropStack
 
 ## Requirements
 

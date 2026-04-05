@@ -5,17 +5,23 @@
 **Java 用スタック型プロパティリゾルバ + コンポーネントレジストリ。DI 不要。アノテーション不要。プロキシ不要。**
 
 ```java
-enum Config implements PropertyKey {
-    DB_HOST, DB_PORT, DB_NAME;
-    public String key() { return name(); }
+enum Db implements KeyHolder {
+    HOST(TypedKey.string("DB_HOST", "localhost")),
+    PORT(TypedKey.integer("DB_PORT", 5432)),
+    NAME(TypedKey.string("DB_NAME"));
+
+    private final TypedKey<?> key;
+    Db(TypedKey<?> key) { this.key = key; }
+    public TypedKey<?> typedKey() { return key; }
 }
 
 PropStack props = new PropStack();
-String host = props.require(Config.DB_HOST);
-int port = props.getInt(Config.DB_PORT);
+String host = props.get(Db.HOST);     // String — 型安全
+int port = props.get(Db.PORT);        // int — 型安全
+String name = props.require(Db.NAME); // 未設定で例外
 ```
 
-型安全。スタック可能。依存ゼロ。
+型安全。スタック可能。機能別グルーピング。依存ゼロ。
 
 ## なぜ PropStack か？
 
@@ -36,6 +42,8 @@ int port = props.getInt(Config.DB_PORT);
 | `PropStack` | スタック型プロパティリゾルバ |
 | `Registry` | 名前付き + 型安全なコンポーネントレジストリ |
 | `RegistryKey<T>` | 型安全カタログ enum 用インターフェース |
+| `TypedKey<T>` | 型安全なプロパティキー（デフォルト値付き） |
+| `KeyHolder` | TypedKey を保持する enum 用インターフェース |
 | `PropertySource` | プラガブルなプロパティソースインターフェース |
 | `ApplicationProperties` | PropStack の後方互換エイリアス |
 | `Singletons` | Registry の後方互換エイリアス |
@@ -278,6 +286,14 @@ Registry
       ├── "com.example.DataSource#PROD"         → RegistryKey で取得
       └── "myCustomName"                        → 文字列で取得
 ```
+
+## 設計判断
+
+[docs/design-decisions.ja.md](docs/design-decisions.ja.md) に全設計判断の記録:
+- DD-001: なぜ DI ではないのか
+- DD-002: 命名
+- DD-003: TypedKey enum パターン
+- DD-004: PropStack でオブジェクト構築はしない
 
 ## 要件
 

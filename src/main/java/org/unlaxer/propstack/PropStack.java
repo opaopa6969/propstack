@@ -162,4 +162,59 @@ public class PropStack implements PropertySource {
     public String require(PropertyKey key) {
         return require(key.key());
     }
+
+    // ---- TypedKey / KeyHolder methods ----
+
+    /**
+     * Get a typed value from a {@link TypedKey} directly.
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T get(TypedKey<T> key) {
+        return get(key.key())
+                .filter(s -> !s.isBlank())
+                .map(s -> (T) convert(s, key.type()))
+                .orElse(key.defaultValue());
+    }
+
+    /**
+     * Get a typed value from a {@link KeyHolder} (enum entry).
+     *
+     * <pre>
+     * String host = props.get(Smtp.HOST);
+     * int port = props.get(Smtp.PORT);
+     * </pre>
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T get(KeyHolder holder) {
+        return (T) get(holder.typedKey());
+    }
+
+    /**
+     * Require a typed value. Throws if missing and no default.
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T require(TypedKey<T> key) {
+        T value = get(key);
+        if (value == null) {
+            throw new IllegalStateException("Required property missing: " + key.key());
+        }
+        return value;
+    }
+
+    /**
+     * Require a typed value from a KeyHolder enum.
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T require(KeyHolder holder) {
+        return (T) require(holder.typedKey());
+    }
+
+    private static Object convert(String value, Class<?> type) {
+        if (type == String.class) return value;
+        if (type == Integer.class || type == int.class) return Integer.parseInt(value);
+        if (type == Boolean.class || type == boolean.class) return Boolean.parseBoolean(value);
+        if (type == Long.class || type == long.class) return Long.parseLong(value);
+        if (type == Double.class || type == double.class) return Double.parseDouble(value);
+        return value;
+    }
 }
