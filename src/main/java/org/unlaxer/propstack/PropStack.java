@@ -293,6 +293,9 @@ public class PropStack implements PropertySource {
                     display = String.valueOf(tk.defaultValue()) + " (default)";
                 } else {
                     display = "[MISSING]";
+                    if (tk.description() != null) {
+                        display += " — " + tk.description();
+                    }
                 }
                 sb.append(String.format("  %-25s = %s%n", tk.key(), display));
             }
