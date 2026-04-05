@@ -4,8 +4,11 @@
 
 [DGE (Design-Gap Exploration)](https://github.com/opaopa6969/DGE-toolkit) — キャラクター駆動の対話による設計判断の記録。
 
+各 DD はそれを生んだ DGE セッション（[dge/sessions/](../dge/sessions/)）にリンクしている。
+
 ## DD-001: なぜ DI ではないのか
 
+**DGE Session:** [002-why-not-di](../dge/sessions/2026-04-05-002-why-not-di.md)
 [README — なぜ DI ではないのか？](../README.ja.md#なぜ-di-ではないのか--会話劇) を参照。
 
 **判断:** PropStack は DI フレームワークではなく Registry パターンを採用。
@@ -13,12 +16,14 @@
 
 ## DD-002: 命名 — PropStack
 
+**DGE Session:** [001-naming](../dge/sessions/2026-04-05-001-naming.md)
 **判断:** 「PropStack」を採用。
 **候補:** stackable-properties, unlaxer-config, propstack, cascading-config, konfig, simplestack
 **理由:** 短い。被りなし。`new PropStack()` が綺麗。名は体を表す必要はない — DI 嫌いが作った小さなライブラリ。
 
 ## DD-003: TypedKey — Enum + TypedKey フィールド（案 D）
 
+**DGE Session:** [003-typedkey-enum](../dge/sessions/2026-04-05-003-typedkey-enum.md)
 **判断:** Enum が `KeyHolder` を実装し、`TypedKey<?>` をフィールドとして保持する。
 
 **問題:** Java の enum は1つのジェネリクスパラメータしか持てない。設定グループ（例: SMTP）には String, Integer, Boolean のキーが混在する。
@@ -50,6 +55,7 @@ int port = props.get(Smtp.PORT);     // コンパイル時に int
 
 ## DD-004: PropStack でオブジェクト構築はしない
 
+**DGE Session:** [004-no-object-construction](../dge/sessions/2026-04-05-004-no-object-construction.md)
 **判断:** PropStack は文字列から任意のオブジェクト（DataSource, Cache 実装等）への変換を**サポートしない**。
 
 **却下されたアプローチ:**
@@ -86,6 +92,7 @@ app.start();
 
 ## DD-005: fraud-alert ApplicationProperties からの機能移植
 
+**DGE Session:** [005-fraud-alert-features](../dge/sessions/2026-04-05-005-fraud-alert-features.md)
 **背景:** 元の ApplicationProperties (fraud-alert) には PropStack にない追加機能がある。DGE セッションで各機能を評価した。
 
 **採用:**
@@ -117,6 +124,7 @@ app.start();
 
 ## DD-006: スタック途中差し込み — Inserter より defaultSources()
 
+**DGE Session:** [005-fraud-alert-features](../dge/sessions/2026-04-05-005-fraud-alert-features.md) (DD-005 と同セッション)
 **問題:** ユーザーがカスタム PropertySource（Vault, Consul 等）をスタックの特定位置に差し込みたい場合がある。
 
 **候補:**
@@ -145,6 +153,7 @@ PropStack props = new PropStack(false, sources.toArray(PropertySource[]::new));
 
 ## DD-007: 競合分析 — DGE レビューで採用した機能
 
+**DGE Session:** [006-competitive-analysis](../dge/sessions/2026-04-05-006-competitive-analysis.md)
 **背景:** PropStack v0.5.0 を Spring Boot, MicroProfile Config, Typesafe Config, owner, dotenv と比較する DGE セッション。Red Team がギャップを特定。
 
 **採用:**
@@ -175,6 +184,7 @@ PropStack props = new PropStack(false, sources.toArray(PropertySource[]::new));
 
 ## DD-008: defaultsTo() vs describedAs() — Doc as Code
 
+**DGE Session:** [006-competitive-analysis](../dge/sessions/2026-04-05-006-competitive-analysis.md) (DD-007 と同セッション)
 **問題:** `TypedKey.string("DB_HOST", "localhost")` は曖昧。`"localhost"` は本番で使える安全なデフォルト？それとも開発の仮値？デフォルトなら `validate()` が設定不備を検出しない。ドキュメントなら値として返すべきではない。
 
 **解決策:** 安全なデフォルトとドキュメントを明示的なビルダーメソッドで分離:
