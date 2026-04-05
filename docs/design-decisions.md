@@ -138,3 +138,33 @@ PropStack props = new PropStack(false, sources.toArray(PropertySource[]::new));
 ```
 
 No new API concepts. Java's `List` is the insertion mechanism.
+
+## DD-007: Competitive Analysis — Features Adopted from DGE Review
+
+**Context:** DGE session comparing PropStack v0.5.0 against Spring Boot, MicroProfile Config, Typesafe Config, owner, and dotenv. Red Team identified gaps.
+
+**Adopted:**
+
+| Feature | Implementation | Why |
+|---------|---------------|-----|
+| `TypedKey.stringList()` | Comma-separated → `List<String>` | Spring has it, useful for allowed origins, tags, etc. |
+| `TypedKey.secret()` | `sensitive` flag, masked in `dump()` | Prevents password leaks in logs |
+| `dump(KeyHolder...)` | Shows all keys with values, defaults, secrets, missing | Spring doesn't have this. One-line diagnostic |
+| `trace(key)` | Shows which source each value comes from | Spring can't do this. Ultimate debugging tool |
+
+**Rejected:**
+
+| Feature | Why |
+|---------|-----|
+| YAML support | Adds dependency (SnakeYAML). `.properties` with dot notation is sufficient |
+| Nested structure | Dot notation (`db.host`) already works with flat properties |
+| Hot reload | Bug-prone. Restart is safer and simpler |
+| IDE metadata JSON | Over-engineering for this scope |
+
+**PropStack advantages over Spring (confirmed by Red Team):**
+
+1. `validate()` — reports ALL missing keys. Spring fails one by one
+2. TypedKey enum grouping — feature-based catalog. Spring has nothing equivalent
+3. `trace()` — shows exactly which source a value came from. Spring can't
+4. `dump()` — one-line diagnostic with secret masking. Spring needs actuator
+5. 64 tests, 0 dependencies, <1ms startup

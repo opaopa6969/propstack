@@ -264,12 +264,96 @@ public class PropStack implements PropertySource {
         }
     }
 
+    // ---- dump / trace ----
+
+    /**
+     * Dump all keys from the given KeyHolder enums. Shows values, defaults, secrets, and missing keys.
+     *
+     * <pre>
+     * props.dump(Smtp.class, Db.class);
+     * // SMTP_HOST     = smtp.gmail.com
+     * // SMTP_PORT     = 587 (default)
+     * // SMTP_PASSWORD = ****** (secret)
+     * // DB_NAME       = [MISSING]
+     * </pre>
+     */
+    @SafeVarargs
+    public final String dump(Class<? extends KeyHolder>... keyHolderClasses) {
+        StringBuilder sb = new StringBuilder();
+        for (Class<? extends KeyHolder> clazz : keyHolderClasses) {
+            if (!clazz.isEnum()) continue;
+            sb.append("--- ").append(clazz.getSimpleName()).append(" ---\n");
+            for (KeyHolder holder : clazz.getEnumConstants()) {
+                TypedKey<?> tk = holder.typedKey();
+                String raw = get(tk.key()).orElse(null);
+                String display;
+                if (raw != null) {
+                    display = tk.sensitive() ? "******" : raw;
+                } else if (tk.defaultValue() != null) {
+                    display = String.valueOf(tk.defaultValue()) + " (default)";
+                } else {
+                    display = "[MISSING]";
+                }
+                sb.append(String.format("  %-25s = %s%n", tk.key(), display));
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Trace where a key's value comes from. Returns a description of each source checked.
+     *
+     * <pre>
+     * props.trace("DB_HOST");
+     * // DB_HOST:
+     * //   [0] set()               → (empty)
+     * //   [1] SystemProperties    → (empty)
+     * //   [2] EnvironmentVariables → prod-db  ← MATCH
+     * //   [3] ~/.volta/app.props  → localhost
+     * //   [4] classpath app.props → localhost
+     * </pre>
+     */
+    public String trace(String key) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(key).append(":\n");
+        for (int i = 0; i < sources.size(); i++) {
+            PropertySource source = sources.get(i);
+            Optional<String> value = source.getRawValue(key);
+            String sourceName = source.name();
+            if (sourceName == null || sourceName.contains("$$")) {
+                sourceName = "source[" + i + "]";
+            }
+            String val = value.map(v -> v.isEmpty() ? "(blank)" : v).orElse("(empty)");
+            String marker = value.isPresent() ? "  ← MATCH" : "";
+            sb.append(String.format("  [%d] %-25s → %s%s%n", i, sourceName, val, marker));
+            if (value.isPresent()) break;
+        }
+        return sb.toString();
+    }
+
+    public String trace(PropertyKey key) {
+        return trace(key.key());
+    }
+
+    public String trace(KeyHolder holder) {
+        return trace(holder.typedKey().key());
+    }
+
+    // ---- convert ----
+
+    @SuppressWarnings("unchecked")
     private static Object convert(String value, Class<?> type) {
         if (type == String.class) return value;
         if (type == Integer.class || type == int.class) return Integer.parseInt(value);
         if (type == Boolean.class || type == boolean.class) return Boolean.parseBoolean(value);
         if (type == Long.class || type == long.class) return Long.parseLong(value);
         if (type == Double.class || type == double.class) return Double.parseDouble(value);
+        if (type == List.class) {
+            return Arrays.stream(value.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .toList();
+        }
         return value;
     }
 }

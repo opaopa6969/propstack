@@ -142,3 +142,33 @@ PropStack props = new PropStack(false, sources.toArray(PropertySource[]::new));
 ```
 
 新しい API 概念なし。Java の `List` が差し込みメカニズム。
+
+## DD-007: 競合分析 — DGE レビューで採用した機能
+
+**背景:** PropStack v0.5.0 を Spring Boot, MicroProfile Config, Typesafe Config, owner, dotenv と比較する DGE セッション。Red Team がギャップを特定。
+
+**採用:**
+
+| 機能 | 実装 | 理由 |
+|------|------|------|
+| `TypedKey.stringList()` | カンマ区切り → `List<String>` | Spring にある。origins, tags 等に便利 |
+| `TypedKey.secret()` | `sensitive` フラグ、`dump()` でマスク | ログへのパスワード漏洩防止 |
+| `dump(KeyHolder...)` | 全キーの値・デフォルト・シークレット・未設定を表示 | Spring にはない。一行で診断 |
+| `trace(key)` | どのソースから値が来たかを表示 | Spring にはできない。究極のデバッグツール |
+
+**却下:**
+
+| 機能 | 理由 |
+|------|------|
+| YAML | 依存追加 (SnakeYAML)。ドット区切り `.properties` で十分 |
+| ネスト構造 | ドット記法 (`db.host`) がフラットプロパティで動く |
+| ホットリロード | バグの温床。再起動の方が安全 |
+| IDE メタデータ JSON | このスコープには過剰 |
+
+**PropStack が Spring に勝ってる点（Red Team 確認済み）:**
+
+1. `validate()` — 全ての不足キーを一括報告。Spring は1つずつ死ぬ
+2. TypedKey enum グルーピング — 機能別カタログ。Spring に同等機能なし
+3. `trace()` — どのソースから値が来たか表示。Spring にはできない
+4. `dump()` — シークレットマスク付き一行診断。Spring は actuator が必要
+5. 64 テスト、0 依存、<1ms 起動
