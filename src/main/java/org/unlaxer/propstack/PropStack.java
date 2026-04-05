@@ -132,4 +132,34 @@ public class PropStack implements PropertySource {
     public String require(String key) {
         return get(key).orElseThrow(() -> new IllegalStateException("Required property missing: " + key));
     }
+
+    // ---- PropertyKey convenience methods ----
+
+    public String get(PropertyKey key, String defaultValue) {
+        return get(key.key(), defaultValue);
+    }
+
+    public int getInt(PropertyKey key, int defaultValue) {
+        return getInt(key.key(), defaultValue);
+    }
+
+    public int getInt(PropertyKey key) {
+        return getInt(key.key(), 0);
+    }
+
+    public boolean getBoolean(PropertyKey key, boolean defaultValue) {
+        return getBoolean(key.key(), defaultValue);
+    }
+
+    public long getLong(PropertyKey key, long defaultValue) {
+        return getLong(key.key(), defaultValue);
+    }
+
+    public double getDouble(PropertyKey key, double defaultValue) {
+        return getDouble(key.key(), defaultValue);
+    }
+
+    public String require(PropertyKey key) {
+        return require(key.key());
+    }
 }

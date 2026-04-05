@@ -5,12 +5,17 @@
 **Stackable property resolver + component registry for Java. No DI. No annotations. No proxies.**
 
 ```java
+enum Config implements PropertyKey {
+    DB_HOST, DB_PORT, DB_NAME;
+    public String key() { return name(); }
+}
+
 PropStack props = new PropStack();
-String dbHost = props.get("DB_HOST", "localhost");
-int port = props.getInt("PORT", 8080);
+String host = props.require(Config.DB_HOST);
+int port = props.getInt(Config.DB_PORT);
 ```
 
-That's it.
+Type-safe. Stackable. Zero dependencies.
 
 ## Why?
 
