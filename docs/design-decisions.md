@@ -4,21 +4,26 @@
 
 Design decisions made through [DGE (Design-Gap Exploration)](https://github.com/opaopa6969/DGE-toolkit) — character-driven dialogue for finding design gaps.
 
+Each DD links to the DGE session that produced it in [dge/sessions/](../dge/sessions/).
+
 ## DD-001: Why Not DI?
 
-See [README — Why Not DI?](../README.md#why-not-di--a-dialogue)
+**DGE Session:** [002-why-not-di](../dge/sessions/2026-04-05-002-why-not-di.md)
+See also [README — Why Not DI?](../README.md#why-not-di--a-dialogue)
 
 **Decision:** PropStack uses a Registry pattern, not a DI framework.
 **Rationale:** DI the principle is correct; DI frameworks are overkill. Spring's `@Autowired` has the same problems as Service Locator, plus proxy black magic.
 
 ## DD-002: Naming — PropStack
 
+**DGE Session:** [001-naming](../dge/sessions/2026-04-05-001-naming.md)
 **Decision:** Named "PropStack" instead of alternatives.
 **Candidates:** stackable-properties, unlaxer-config, propstack, cascading-config, konfig, simplestack
 **Rationale:** Short, no naming conflicts, `new PropStack()` reads well. The name doesn't need to describe the full feature set — it's a small library by someone who hates DI.
 
 ## DD-003: TypedKey — Enum with TypedKey Field (案 D)
 
+**DGE Session:** [003-typedkey-enum](../dge/sessions/2026-04-05-003-typedkey-enum.md)
 **Decision:** Enums implement `KeyHolder` and hold `TypedKey<?>` as a field.
 
 **Problem:** Java enums can only implement one generic type parameter. A config group (e.g. SMTP) has String, Integer, and Boolean keys in the same enum.
@@ -50,6 +55,7 @@ int port = props.get(Smtp.PORT);     // compile-time int
 
 ## DD-004: No Object Construction in PropStack
 
+**DGE Session:** [004-no-object-construction](../dge/sessions/2026-04-05-004-no-object-construction.md)
 **Decision:** PropStack does NOT support converting strings to arbitrary objects (e.g. DataSource, Cache implementations).
 
 **Rejected approaches:**
@@ -86,6 +92,7 @@ app.start();
 
 ## DD-005: Features from fraud-alert ApplicationProperties
 
+**DGE Session:** [005-fraud-alert-features](../dge/sessions/2026-04-05-005-fraud-alert-features.md)
 **Context:** The original ApplicationProperties (fraud-alert) has additional features not yet in PropStack. DGE session evaluated each.
 
 **Adopted:**
@@ -113,6 +120,7 @@ app.start();
 
 ## DD-006: Stack Insertion — defaultSources() over Inserter
 
+**DGE Session:** [005-fraud-alert-features](../dge/sessions/2026-04-05-005-fraud-alert-features.md) (same session as DD-005)
 **Problem:** Users sometimes need to insert a custom PropertySource (e.g. Vault, Consul) at a specific position in the resolution stack.
 
 **Candidates:**
@@ -141,6 +149,7 @@ No new API concepts. Java's `List` is the insertion mechanism.
 
 ## DD-007: Competitive Analysis — Features Adopted from DGE Review
 
+**DGE Session:** [006-competitive-analysis](../dge/sessions/2026-04-05-006-competitive-analysis.md)
 **Context:** DGE session comparing PropStack v0.5.0 against Spring Boot, MicroProfile Config, Typesafe Config, owner, and dotenv. Red Team identified gaps.
 
 **Adopted:**
@@ -171,6 +180,7 @@ No new API concepts. Java's `List` is the insertion mechanism.
 
 ## DD-008: defaultsTo() vs describedAs() — Doc as Code
 
+**DGE Session:** [006-competitive-analysis](../dge/sessions/2026-04-05-006-competitive-analysis.md) (same session as DD-007)
 **Problem:** `TypedKey.string("DB_HOST", "localhost")` is ambiguous. Is `"localhost"` a safe production default or a development convenience? If it's a default, `validate()` won't catch missing config. If it's documentation, it shouldn't be returned as a value.
 
 **Solution:** Separate safe defaults from documentation with explicit builder methods:
