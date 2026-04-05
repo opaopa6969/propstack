@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.unlaxer</groupId>
   <artifactId>propstack</artifactId>
-  <version>0.3.0</version>
+  <version>0.4.0</version>
   <name>PropStack</name>
   <description>Stackable property resolver + minimal service locator. No DI. No annotations. One line: new PropStack().</description>
   <url>https://github.com/opaopa6969/propstack</url>
@@ -41,7 +41,7 @@
     <maven.compiler.target>21</maven.compiler.target>
     <maven.compiler.source>21</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <revision>0.3.0</revision>
+    <revision>0.4.0</revision>
   </properties>
   <dependencies>
     <dependency>

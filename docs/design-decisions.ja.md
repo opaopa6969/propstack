@@ -83,3 +83,34 @@ app.start();
 ```
 
 **境界:** PropStack は文字列を読む。Registry はオブジェクトを管理する。構築はアプリの責任。
+
+## DD-005: fraud-alert ApplicationProperties からの機能移植
+
+**背景:** 元の ApplicationProperties (fraud-alert) には PropStack にない追加機能がある。DGE セッションで各機能を評価した。
+
+**採用:**
+
+| 機能 | 設計 |
+|------|------|
+| コマンドライン引数 `--KEY=value` | `new PropStack(args)` — args を最優先ソースとして追加する新コンストラクタ |
+| 明示的 profile | `new PropStack("myapp", "prod")` — ベースに加えて `application.prod.properties` を読む |
+| `validate()` 一括検証 | `props.validate(Smtp.class, Db.class)` — 最初の1つじゃなく全ての不足キーを一度に報告 |
+
+**オプトインで採用:**
+
+| 機能 | 設計 |
+|------|------|
+| 自動検出 profile (user/host/os) | `new PropStack("myapp", PropStack.autoProfile())` — オプトインのみ、デフォルト無効。`application.user_opa.properties` 等を読む |
+
+**却下:**
+
+| 機能 | 理由 |
+|------|------|
+| `getInstance()` FQDN リフレクション | DD-004: 責務違反 |
+| `Populator` 自動バインド | DI フレームワーク化する |
+| `getEnum()` 型ベース探索 | ニッチ。必要になったら追加 |
+| 自動検出をデフォルトに | 暗黙の振る舞い。新メンバーにはデバッグ困難。オプトインなら OK |
+
+**DGE での議論ポイント:**
+
+> 自動検出は作った人には便利だが、知らない人には魔法に見える。実際に fraud-alert では「自分の環境で application.user_{name}.properties を作って、変えたい項目だけ書けばいい」と案内していた。便利だが仕組みを知らない人にとっては暗黙の振る舞い。オプトインにすることで「意図的に選択した黒魔術」になる。

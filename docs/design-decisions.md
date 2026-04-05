@@ -83,3 +83,30 @@ app.start();
 ```
 
 **Boundary:** PropStack reads strings. Registry manages objects. Construction is the app's responsibility.
+
+## DD-005: Features from fraud-alert ApplicationProperties
+
+**Context:** The original ApplicationProperties (fraud-alert) has additional features not yet in PropStack. DGE session evaluated each.
+
+**Adopted:**
+
+| Feature | Design |
+|---------|--------|
+| Command-line args `--KEY=value` | `new PropStack(args)` — new constructor that adds args as highest-priority source |
+| Explicit profile | `new PropStack("myapp", "prod")` — loads `application.prod.properties` in addition to base |
+| `validate()` bulk check | `props.validate(Smtp.class, Db.class)` — reports ALL missing keys at once, not just the first |
+
+**Adopted with opt-in:**
+
+| Feature | Design |
+|---------|--------|
+| Auto-detect profile (user/host/os) | `new PropStack("myapp", PropStack.autoProfile())` — opt-in only, not default. Loads `application.user_opa.properties` etc. |
+
+**Rejected:**
+
+| Feature | Why |
+|---------|-----|
+| `getInstance()` FQDN reflection | DD-004: responsibility violation |
+| `Populator` auto-bind | Becomes a DI framework |
+| `getEnum()` type-based lookup | Niche. Add when needed |
+| Auto-detect as default | Implicit behavior, hard to debug for newcomers. Opt-in is fine. |
