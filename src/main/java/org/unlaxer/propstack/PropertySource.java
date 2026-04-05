@@ -150,6 +150,83 @@ public interface PropertySource {
         };
     }
 
+    // ---- CLI args ----
+
+    /**
+     * Parse {@code --KEY=value} command-line arguments.
+     * <pre>
+     * java -jar app.jar --DB_HOST=prod-db --DB_PORT=3306
+     * </pre>
+     */
+    static PropertySource fromArgs(String[] args) {
+        Map<String, String> map = new HashMap<>();
+        if (args != null) {
+            for (String arg : args) {
+                if (arg.startsWith("--") && arg.contains("=")) {
+                    int eq = arg.indexOf('=');
+                    map.put(arg.substring(2, eq), arg.substring(eq + 1));
+                }
+            }
+        }
+        return of(map);
+    }
+
+    // ---- Profile-based ----
+
+    /**
+     * Load {@code application.{profile}.properties} from classpath.
+     * <pre>
+     * PropertySource.forProfile("prod")
+     * // → classpath: application.prod.properties
+     * </pre>
+     */
+    static PropertySource forProfile(String profile) {
+        return fromClasspath("application." + profile + ".properties");
+    }
+
+    /**
+     * Load {@code application.{profile}.properties} from user home.
+     */
+    static PropertySource forProfile(String appName, String profile) {
+        return fromPath(Path.of(System.getProperty("user.home"),
+                "." + appName, "application." + profile + ".properties"));
+    }
+
+    // ---- Auto-detect profiles ----
+
+    /**
+     * Load {@code application.host_{hostname}.properties} from classpath.
+     */
+    static PropertySource forHost() {
+        try {
+            String hostname = java.net.InetAddress.getLocalHost().getHostName();
+            return fromClasspath("application.host_" + hostname + ".properties");
+        } catch (Exception e) {
+            return of(Map.of());
+        }
+    }
+
+    /**
+     * Load {@code application.user_{username}.properties} from classpath.
+     */
+    static PropertySource forUser() {
+        String user = System.getProperty("user.name");
+        return user != null ? fromClasspath("application.user_" + user + ".properties") : of(Map.of());
+    }
+
+    /**
+     * Load {@code application.os_{osname}.properties} from classpath.
+     * OS name is lowercased and spaces replaced with underscores.
+     */
+    static PropertySource forOs() {
+        String os = System.getProperty("os.name");
+        if (os == null) return of(Map.of());
+        String normalized = os.toLowerCase().replace(' ', '_');
+        return fromClasspath("application.os_" + normalized + ".properties");
+    }
+
+    // ---- Map ----
+
     static PropertySource of(Map<String, String> map) {
         return new PropertySource() {
             @Override public Optional<String> getRawValue(String key) {

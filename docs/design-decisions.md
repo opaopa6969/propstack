@@ -110,3 +110,31 @@ app.start();
 | `Populator` auto-bind | Becomes a DI framework |
 | `getEnum()` type-based lookup | Niche. Add when needed |
 | Auto-detect as default | Implicit behavior, hard to debug for newcomers. Opt-in is fine. |
+
+## DD-006: Stack Insertion — defaultSources() over Inserter
+
+**Problem:** Users sometimes need to insert a custom PropertySource (e.g. Vault, Consul) at a specific position in the resolution stack.
+
+**Candidates:**
+
+| Approach | Verdict | Reason |
+|----------|---------|--------|
+| A: Inserter pattern (predicate-based) | Rejected | Depends on internal implementation details |
+| B: Full manual construction | Already exists | But tedious to repeat default config |
+| C: Index-based insert | Rejected | Fragile — breaks if internal order changes |
+| D: Named sources + insertAfter("env") | Rejected | Over-engineering |
+| **E: `defaultSources()` method** | **Adopted** | Zero new concepts. Standard List operations |
+
+**Solution:** Expose the default source list as a mutable `ArrayList`:
+
+```java
+// 99% of users
+PropStack props = new PropStack("myapp");
+
+// 1% who need custom insertion
+var sources = PropStack.defaultSources("myapp");
+sources.add(2, new VaultPropertySource(client));  // standard List.add
+PropStack props = new PropStack(false, sources.toArray(PropertySource[]::new));
+```
+
+No new API concepts. Java's `List` is the insertion mechanism.

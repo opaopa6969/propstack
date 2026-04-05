@@ -60,6 +60,14 @@ public class PropStack implements PropertySource {
     }
 
     /**
+     * With command-line args: {@code --KEY=value} has highest priority.
+     */
+    public PropStack(String appName, String[] args) {
+        this(appName);
+        this.sources.add(1, PropertySource.fromArgs(args));
+    }
+
+    /**
      * Fully custom sources.
      *
      * @param enableEnvironments if true, adds System Properties and env vars to the stack
@@ -73,6 +81,27 @@ public class PropStack implements PropertySource {
             this.sources.add(PropertySource.environmentVariables());
         }
         this.sources.addAll(List.of(extras));
+    }
+
+    /**
+     * Returns the default source list as a mutable ArrayList.
+     * Use standard List operations to insert/remove/reorder sources,
+     * then pass to {@code new PropStack(false, sources.toArray(...))}.
+     *
+     * <pre>
+     * var sources = PropStack.defaultSources("myapp");
+     * sources.add(2, vaultSource);  // insert after env vars
+     * PropStack props = new PropStack(false, sources.toArray(PropertySource[]::new));
+     * </pre>
+     */
+    public static java.util.ArrayList<PropertySource> defaultSources(String appName) {
+        return new java.util.ArrayList<>(List.of(
+                PropertySource.systemProperties(),
+                PropertySource.environmentVariables(),
+                PropertySource.fromPath(
+                        Path.of(System.getProperty("user.home"), "." + appName, "application.properties")),
+                PropertySource.fromClasspath("application.properties")
+        ));
     }
 
     @Override
@@ -207,6 +236,32 @@ public class PropStack implements PropertySource {
     @SuppressWarnings("unchecked")
     public <T> T require(KeyHolder holder) {
         return (T) require(holder.typedKey());
+    }
+
+    /**
+     * Validate that all required keys (those with no default) have values.
+     * Reports ALL missing keys at once.
+     *
+     * <pre>
+     * props.validate(Smtp.class, Db.class);
+     * // → IllegalStateException: Missing required properties: [SMTP_HOST, DB_NAME]
+     * </pre>
+     */
+    @SafeVarargs
+    public final void validate(Class<? extends KeyHolder>... keyHolderClasses) {
+        List<String> missing = new ArrayList<>();
+        for (Class<? extends KeyHolder> clazz : keyHolderClasses) {
+            if (!clazz.isEnum()) continue;
+            for (KeyHolder holder : clazz.getEnumConstants()) {
+                TypedKey<?> tk = holder.typedKey();
+                if (tk.defaultValue() == null && get(tk.key()).isEmpty()) {
+                    missing.add(tk.key());
+                }
+            }
+        }
+        if (!missing.isEmpty()) {
+            throw new IllegalStateException("Missing required properties: " + missing);
+        }
     }
 
     private static Object convert(String value, Class<?> type) {

@@ -114,3 +114,31 @@ app.start();
 **DGE での議論ポイント:**
 
 > 自動検出は作った人には便利だが、知らない人には魔法に見える。実際に fraud-alert では「自分の環境で application.user_{name}.properties を作って、変えたい項目だけ書けばいい」と案内していた。便利だが仕組みを知らない人にとっては暗黙の振る舞い。オプトインにすることで「意図的に選択した黒魔術」になる。
+
+## DD-006: スタック途中差し込み — Inserter より defaultSources()
+
+**問題:** ユーザーがカスタム PropertySource（Vault, Consul 等）をスタックの特定位置に差し込みたい場合がある。
+
+**候補:**
+
+| アプローチ | 判定 | 理由 |
+|----------|------|------|
+| A: Inserter パターン (predicate) | 却下 | 内部実装への依存 |
+| B: 全部手書き | 既にある | デフォルト構成を毎回書くのが面倒 |
+| C: インデックス指定 insert | 却下 | 脆い。内部順番変更で壊れる |
+| D: 名前付きソース + insertAfter | 却下 | 過剰設計 |
+| **E: `defaultSources()` メソッド** | **採用** | 新概念ゼロ。標準の List 操作 |
+
+**解決策:** デフォルトソースリストを `ArrayList` として公開:
+
+```java
+// 99% のユーザー
+PropStack props = new PropStack("myapp");
+
+// 1% のカスタム差し込み
+var sources = PropStack.defaultSources("myapp");
+sources.add(2, new VaultPropertySource(client));  // 普通の List.add
+PropStack props = new PropStack(false, sources.toArray(PropertySource[]::new));
+```
+
+新しい API 概念なし。Java の `List` が差し込みメカニズム。
