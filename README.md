@@ -108,6 +108,37 @@ PropStack props = new PropStack(true,
 );
 ```
 
+### Per-Developer Environment Overrides
+
+Team members have different local environments. Instead of each person editing shared config files, each developer creates their own override file:
+
+```java
+PropStack props = new PropStack("myapp",
+    PropertySource.forUser(),    // application.user_{username}.properties
+    PropertySource.forHost()     // application.host_{hostname}.properties
+);
+```
+
+```
+classpath:
+  application.properties                         ← shared defaults
+  application.user_alice.properties              ← Alice's overrides
+  application.user_bob.properties                ← Bob's overrides
+  application.host_prod-server-01.properties     ← production host
+```
+
+```properties
+# application.user_alice.properties
+# Only the keys Alice needs to override
+DB_HOST=alice-local-db
+DB_PORT=54321
+```
+
+New team member asks: "My environment has a different DB host, what do I do?"
+Answer: "Create `application.user_{your-name}.properties` and add only the keys you need to change."
+
+No shared files modified. No merge conflicts. Opt-in — you have to explicitly add `PropertySource.forUser()` to enable it.
+
 ### Variable Expansion
 
 ```properties

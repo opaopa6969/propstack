@@ -108,6 +108,37 @@ PropStack props = new PropStack(true,
 );
 ```
 
+### 開発者ごとの環境オーバーライド
+
+チームメンバーのローカル環境はそれぞれ違う。共有の設定ファイルを各自が編集する代わりに、開発者ごとのオーバーライドファイルを作る:
+
+```java
+PropStack props = new PropStack("myapp",
+    PropertySource.forUser(),    // application.user_{ユーザー名}.properties
+    PropertySource.forHost()     // application.host_{ホスト名}.properties
+);
+```
+
+```
+classpath:
+  application.properties                         ← 共通デフォルト
+  application.user_alice.properties              ← Alice のオーバーライド
+  application.user_bob.properties                ← Bob のオーバーライド
+  application.host_prod-server-01.properties     ← 本番ホスト用
+```
+
+```properties
+# application.user_alice.properties
+# Alice が変えたいキーだけ書く
+DB_HOST=alice-local-db
+DB_PORT=54321
+```
+
+新メンバー: 「自分の環境では DB のホストが違うんですが...」
+回答: 「`application.user_{あなたの名前}.properties` を作って、変えたいキーだけ追加すればいいよ」
+
+共有ファイルの変更なし。マージコンフリクトなし。オプトイン — `PropertySource.forUser()` を明示的に追加しないと有効にならない。
+
 ### 変数展開
 
 ```properties
