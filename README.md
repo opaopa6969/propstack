@@ -61,11 +61,11 @@ It also includes `Registry` — a minimal component registry for people who don'
 ### Resolution Order
 
 ```
-1. props.set("KEY", "value")       ← programmatic override (highest)
-2. -DKEY=value                      ← JVM system property
-3. KEY=value (env var)              ← environment variable
-4. ~/.volta/application.properties  ← user home file
-5. classpath application.properties ← bundled defaults (lowest)
+1. props.set("KEY", "value")              ← programmatic override (highest)
+2. -DKEY=value                             ← JVM system property
+3. KEY=value (env var)                     ← environment variable
+4. ~/.<appName>/application.properties     ← user home file (when appName specified)
+5. classpath application.properties        ← bundled defaults (lowest)
 ```
 
 ### Maven
@@ -74,7 +74,7 @@ It also includes `Registry` — a minimal component registry for people who don'
 <dependency>
     <groupId>org.unlaxer</groupId>
     <artifactId>propstack</artifactId>
-    <version>0.7.0</version>
+    <version>0.9.0</version>
 </dependency>
 ```
 
@@ -94,17 +94,17 @@ String secret = props.require("JWT_SECRET");
 
 ### App Name and `~/` Directory
 
-`new PropStack()` with no arguments reads from `~/.volta/application.properties`.
-Why "volta"? PropStack was born inside the [volta-platform](https://github.com/opaopa6969/volta-platform) project.
-
-**For your own app, always specify your app name:**
-
 ```java
-// Reads from ~/.myapp/application.properties
+// Simple: no home directory file
+PropStack props = new PropStack();
+// Resolution: set() → -D → env → classpath
+
+// With app name: also reads from home directory
 PropStack props = new PropStack("myapp");
+// Resolution: set() → -D → env → ~/.myapp/application.properties → classpath
 ```
 
-The pattern is `~/.<appName>/application.properties`. This keeps secrets out of your repo — each developer and server has its own file under their home directory.
+Specify an app name when you want to keep secrets (DB passwords, API keys) out of your repo. Each developer and server has its own `~/.<appName>/application.properties`.
 
 ### Custom Sources
 
@@ -366,10 +366,10 @@ Singletons.put(MyClass.class, instance);
 ```
 PropStack
   ├── [0] in-memory overrides (set() calls)
-  ├── [1] System.getProperty()     ← -D flags
-  ├── [2] System.getenv()          ← environment
-  ├── [3] ~/.volta/app.properties  ← user file
-  └── [4] classpath app.properties ← defaults
+  ├── [1] System.getProperty()          ← -D flags
+  ├── [2] System.getenv()               ← environment
+  ├── [3] ~/.<appName>/app.properties   ← user file (when appName specified)
+  └── [4] classpath app.properties      ← defaults
 
 Registry
   └── ConcurrentHashMap<String, Object>

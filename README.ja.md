@@ -61,11 +61,11 @@ System.out.print(props.dump(Db.class));
 ### 解決順序
 
 ```
-1. props.set("KEY", "value")       ← プログラム上書き（最優先）
-2. -DKEY=value                      ← JVM システムプロパティ
-3. KEY=value (環境変数)             ← OS 環境変数
-4. ~/.volta/application.properties  ← ユーザーホームファイル
-5. classpath application.properties ← JAR 内デフォルト（最低優先）
+1. props.set("KEY", "value")              ← プログラム上書き（最優先）
+2. -DKEY=value                             ← JVM システムプロパティ
+3. KEY=value (環境変数)                    ← OS 環境変数
+4. ~/.<appName>/application.properties     ← ユーザーホームファイル（appName 指定時）
+5. classpath application.properties        ← JAR 内デフォルト（最低優先）
 ```
 
 ### Maven
@@ -74,7 +74,7 @@ System.out.print(props.dump(Db.class));
 <dependency>
     <groupId>org.unlaxer</groupId>
     <artifactId>propstack</artifactId>
-    <version>0.7.0</version>
+    <version>0.9.0</version>
 </dependency>
 ```
 
@@ -94,17 +94,17 @@ String secret = props.require("JWT_SECRET");
 
 ### アプリ名と `~/` ディレクトリ
 
-引数なしの `new PropStack()` は `~/.volta/application.properties` を読む。
-なぜ "volta"？PropStack は [volta-platform](https://github.com/opaopa6969/volta-platform) プロジェクトの中で生まれたから。
-
-**自分のアプリでは必ずアプリ名を指定すること:**
-
 ```java
-// ~/.myapp/application.properties から読む
+// シンプル: ホームディレクトリファイルなし
+PropStack props = new PropStack();
+// 解決順: set() → -D → env → classpath
+
+// アプリ名指定: ホームディレクトリからも読む
 PropStack props = new PropStack("myapp");
+// 解決順: set() → -D → env → ~/.myapp/application.properties → classpath
 ```
 
-パターンは `~/.<アプリ名>/application.properties`。シークレットをリポジトリに入れずに済む — 開発者やサーバーごとにホームディレクトリに自分のファイルを持つ。
+シークレット（DB パスワード、API キー）をリポジトリに入れたくない時にアプリ名を指定する。開発者やサーバーごとに `~/.<アプリ名>/application.properties` を持つ。
 
 ### カスタムソース
 
@@ -368,7 +368,7 @@ PropStack
   ├── [0] メモリ上の上書き (set() 呼び出し)
   ├── [1] System.getProperty()     ← -D フラグ
   ├── [2] System.getenv()          ← 環境変数
-  ├── [3] ~/.volta/app.properties  ← ユーザーファイル
+  ├── [3] ~/.<appName>/app.properties  ← ユーザーファイル（appName 指定時）
   └── [4] classpath app.properties ← デフォルト
 
 Registry
