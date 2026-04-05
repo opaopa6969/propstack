@@ -92,12 +92,19 @@ long timeout = props.getLong("TIMEOUT_MS", 5000L);
 String secret = props.require("JWT_SECRET");
 ```
 
-### カスタムアプリ名
+### アプリ名と `~/` ディレクトリ
+
+引数なしの `new PropStack()` は `~/.volta/application.properties` を読む。
+なぜ "volta"？PropStack は [volta-platform](https://github.com/opaopa6969/volta-platform) プロジェクトの中で生まれたから。
+
+**自分のアプリでは必ずアプリ名を指定すること:**
 
 ```java
-// ~/.volta/ ではなく ~/.myapp/application.properties から読む
+// ~/.myapp/application.properties から読む
 PropStack props = new PropStack("myapp");
 ```
+
+パターンは `~/.<アプリ名>/application.properties`。シークレットをリポジトリに入れずに済む — 開発者やサーバーごとにホームディレクトリに自分のファイルを持つ。
 
 ### カスタムソース
 

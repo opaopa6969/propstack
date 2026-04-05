@@ -92,12 +92,19 @@ long timeout = props.getLong("TIMEOUT_MS", 5000L);
 String secret = props.require("JWT_SECRET");
 ```
 
-### Custom App Name
+### App Name and `~/` Directory
+
+`new PropStack()` with no arguments reads from `~/.volta/application.properties`.
+Why "volta"? PropStack was born inside the [volta-platform](https://github.com/opaopa6969/volta-platform) project.
+
+**For your own app, always specify your app name:**
 
 ```java
-// Reads from ~/.myapp/application.properties instead of ~/.volta/
+// Reads from ~/.myapp/application.properties
 PropStack props = new PropStack("myapp");
 ```
+
+The pattern is `~/.<appName>/application.properties`. This keeps secrets out of your repo — each developer and server has its own file under their home directory.
 
 ### Custom Sources
 
