@@ -42,21 +42,36 @@ public class PropStack implements PropertySource {
     private final List<PropertySource> sources;
 
     /**
-     * Default: reads from {@code ~/.volta/application.properties} and classpath.
+     * Simple: no home directory file.
+     * <pre>
+     * PropStack props = new PropStack();
+     * // Resolution: set() → -D → env → classpath
+     * </pre>
      */
     public PropStack() {
-        this("volta");
+        this.sources = new ArrayList<>();
+        this.sources.add(first);
+        this.sources.add(PropertySource.systemProperties());
+        this.sources.add(PropertySource.environmentVariables());
+        this.sources.add(PropertySource.fromClasspath("application.properties"));
     }
 
     /**
-     * Custom app name: reads from {@code ~/.{appName}/application.properties} and classpath.
+     * With app name: also reads from home directory.
+     * <pre>
+     * PropStack props = new PropStack("myapp");
+     * // Resolution: set() → -D → env → ~/.myapp/application.properties → classpath
+     * </pre>
+     *
+     * @param appName your application name. Reads from {@code ~/.<appName>/application.properties}.
      */
     public PropStack(String appName) {
-        this(true,
-                PropertySource.fromPath(
-                        Path.of(System.getProperty("user.home"), "." + appName, "application.properties")),
-                PropertySource.fromClasspath("application.properties")
-        );
+        this();
+        if (appName != null && !appName.isEmpty()) {
+            // insert home dir source before classpath (last position - 1)
+            this.sources.add(this.sources.size() - 1, PropertySource.fromPath(
+                    Path.of(System.getProperty("user.home"), "." + appName, "application.properties")));
+        }
     }
 
     /**
@@ -95,13 +110,15 @@ public class PropStack implements PropertySource {
      * </pre>
      */
     public static java.util.ArrayList<PropertySource> defaultSources(String appName) {
-        return new java.util.ArrayList<>(List.of(
+        var list = new java.util.ArrayList<>(List.of(
                 PropertySource.systemProperties(),
-                PropertySource.environmentVariables(),
-                PropertySource.fromPath(
-                        Path.of(System.getProperty("user.home"), "." + appName, "application.properties")),
-                PropertySource.fromClasspath("application.properties")
-        ));
+                PropertySource.environmentVariables()));
+        if (appName != null && !appName.isEmpty()) {
+            list.add(PropertySource.fromPath(
+                    Path.of(System.getProperty("user.home"), "." + appName, "application.properties")));
+        }
+        list.add(PropertySource.fromClasspath("application.properties"));
+        return list;
     }
 
     @Override

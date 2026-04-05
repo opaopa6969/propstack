@@ -9,10 +9,10 @@ package org.unlaxer.propstack;
 public class ApplicationProperties extends PropStack {
 
     /**
-     * Default: reads from {@code ~/.volta/application.properties} and classpath.
+     * Backward-compatible: reads from {@code ~/.volta/application.properties} and classpath.
      */
     public ApplicationProperties() {
-        super();
+        super("volta");
     }
 
     /**
