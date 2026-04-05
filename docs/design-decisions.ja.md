@@ -171,4 +171,30 @@ PropStack props = new PropStack(false, sources.toArray(PropertySource[]::new));
 2. TypedKey enum グルーピング — 機能別カタログ。Spring に同等機能なし
 3. `trace()` — どのソースから値が来たか表示。Spring にはできない
 4. `dump()` — シークレットマスク付き一行診断。Spring は actuator が必要
-5. 64 テスト、0 依存、<1ms 起動
+5. 74 テスト、0 依存、<1ms 起動
+
+## DD-008: defaultsTo() vs describedAs() — Doc as Code
+
+**問題:** `TypedKey.string("DB_HOST", "localhost")` は曖昧。`"localhost"` は本番で使える安全なデフォルト？それとも開発の仮値？デフォルトなら `validate()` が設定不備を検出しない。ドキュメントなら値として返すべきではない。
+
+**解決策:** 安全なデフォルトとドキュメントを明示的なビルダーメソッドで分離:
+
+```java
+// 安全なデフォルト — 本番で使える値。validate() はスキップ
+PORT(TypedKey.integer("SMTP_PORT").defaultsTo(587))
+
+// ドキュメントのみ — validate() が検出。dump() に説明表示
+HOST(TypedKey.string("DB_HOST").describedAs("database hostname"))
+
+// シークレット + 説明
+PASSWORD(TypedKey.secret("DB_PASSWORD").describedAs("app password"))
+```
+
+**dump() 出力:**
+```
+SMTP_PORT     = 587 (default)
+DB_HOST       = [MISSING] — database hostname
+DB_PASSWORD   = [MISSING] — app password (secret)
+```
+
+**旧2引数ファクトリは deprecated。** `TypedKey.string(key, default)` は動くが `@Deprecated` 付き。

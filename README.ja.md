@@ -6,9 +6,10 @@
 
 ```java
 enum Db implements KeyHolder {
-    HOST(TypedKey.string("DB_HOST", "localhost")),
-    PORT(TypedKey.integer("DB_PORT", 5432)),
-    NAME(TypedKey.string("DB_NAME"));
+    HOST(TypedKey.string("DB_HOST").describedAs("database hostname")),
+    PORT(TypedKey.integer("DB_PORT").defaultsTo(5432)),
+    NAME(TypedKey.string("DB_NAME")),
+    PASSWORD(TypedKey.secret("DB_PASSWORD"));
 
     private final TypedKey<?> key;
     Db(TypedKey<?> key) { this.key = key; }
@@ -16,12 +17,17 @@ enum Db implements KeyHolder {
 }
 
 PropStack props = new PropStack();
-String host = props.get(Db.HOST);     // String — 型安全
-int port = props.get(Db.PORT);        // int — 型安全
-String name = props.require(Db.NAME); // 未設定で例外
+props.validate(Db.class);            // 全ての不足キーを一括報告
+String host = props.require(Db.HOST); // 型安全、未設定で例外
+int port = props.get(Db.PORT);        // 5432 (安全なデフォルト)
+System.out.print(props.dump(Db.class));
+// DB_HOST     = prod-db.internal
+// DB_PORT     = 5432 (default)
+// DB_NAME     = myapp
+// DB_PASSWORD = ****** (secret)
 ```
 
-型安全。スタック可能。機能別グルーピング。依存ゼロ。
+型安全。Doc as code。シークレットマスク。依存ゼロ。
 
 ## なぜ PropStack か？
 
@@ -42,7 +48,7 @@ String name = props.require(Db.NAME); // 未設定で例外
 | `PropStack` | スタック型プロパティリゾルバ |
 | `Registry` | 名前付き + 型安全なコンポーネントレジストリ |
 | `RegistryKey<T>` | 型安全カタログ enum 用インターフェース |
-| `TypedKey<T>` | 型安全なプロパティキー（デフォルト値付き） |
+| `TypedKey<T>` | 型安全なプロパティキー（`.defaultsTo()`, `.describedAs()`, `.secret()`） |
 | `KeyHolder` | TypedKey を保持する enum 用インターフェース |
 | `PropertySource` | プラガブルなプロパティソースインターフェース |
 | `ApplicationProperties` | PropStack の後方互換エイリアス |
@@ -68,7 +74,7 @@ String name = props.require(Db.NAME); // 未設定で例外
 <dependency>
     <groupId>org.unlaxer</groupId>
     <artifactId>propstack</artifactId>
-    <version>0.2.0</version>
+    <version>0.7.0</version>
 </dependency>
 ```
 
@@ -112,16 +118,63 @@ DB_URL=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
 
 `${VAR}` はシステムプロパティと環境変数から解決される。
 
-### 型付きキー（オプション）
+### 型付きキー + KeyHolder
 
 ```java
-enum Config implements PropertyKey {
-    DB_HOST, DB_PORT, DB_NAME;
-    public String key() { return name(); }
+enum Smtp implements KeyHolder {
+    HOST(TypedKey.string("SMTP_HOST").describedAs("SMTP サーバーホスト名")),
+    PORT(TypedKey.integer("SMTP_PORT").defaultsTo(587)),
+    USER(TypedKey.string("SMTP_USER")),
+    PASSWORD(TypedKey.secret("SMTP_PASSWORD").describedAs("Gmail アプリパスワード")),
+    ORIGINS(TypedKey.stringList("ALLOWED_ORIGINS"));
+
+    private final TypedKey<?> key;
+    Smtp(TypedKey<?> key) { this.key = key; }
+    public TypedKey<?> typedKey() { return key; }
 }
 
-String host = props.get(Config.DB_HOST).orElse("localhost");
+String host = props.require(Smtp.HOST);           // 未設定で例外
+int port = props.get(Smtp.PORT);                   // 587 (安全なデフォルト)
+List<String> origins = props.get(Smtp.ORIGINS);    // カンマ区切り → List
 ```
+
+**設計:**
+- `.defaultsTo(value)` — 本番で使える安全なデフォルト。`validate()` はスキップ
+- `.describedAs("text")` — ドキュメントのみ。`validate()` が検出。`dump()` に表示
+- `.secret()` — `dump()` で `******` にマスク
+
+### validate() — 一括検証
+
+```java
+props.validate(Smtp.class, Db.class);
+// → IllegalStateException: Missing required properties: [SMTP_HOST, SMTP_USER, DB_NAME]
+```
+
+全ての不足キーを一度に報告。Spring は 1 つずつ死ぬ。
+
+### dump() — 診断出力
+
+```java
+System.out.print(props.dump(Smtp.class));
+// --- Smtp ---
+//   SMTP_HOST     = smtp.gmail.com
+//   SMTP_PORT     = 587 (default)
+//   SMTP_USER     = me@gmail.com
+//   SMTP_PASSWORD = ****** (secret)
+//   ALLOWED_ORIGINS = [MISSING]
+```
+
+### trace() — ソース追跡
+
+```java
+System.out.print(props.trace("DB_HOST"));
+// DB_HOST:
+//   [0] set()               → (empty)
+//   [1] SystemProperties    → (empty)
+//   [2] EnvironmentVariables → prod-db  ← MATCH
+```
+
+どのソースから値が来たか表示。Spring にはできない。
 
 ***
 
@@ -294,6 +347,10 @@ Registry
 - DD-002: 命名
 - DD-003: TypedKey enum パターン
 - DD-004: PropStack でオブジェクト構築はしない
+- DD-005: fraud-alert からの機能移植
+- DD-006: defaultSources() によるスタック差し込み
+- DD-007: 競合分析 (List, secret, dump, trace)
+- DD-008: defaultsTo() vs describedAs() — Doc as Code
 
 ## 要件
 

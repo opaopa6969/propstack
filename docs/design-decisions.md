@@ -167,4 +167,30 @@ No new API concepts. Java's `List` is the insertion mechanism.
 2. TypedKey enum grouping — feature-based catalog. Spring has nothing equivalent
 3. `trace()` — shows exactly which source a value came from. Spring can't
 4. `dump()` — one-line diagnostic with secret masking. Spring needs actuator
-5. 64 tests, 0 dependencies, <1ms startup
+5. 74 tests, 0 dependencies, <1ms startup
+
+## DD-008: defaultsTo() vs describedAs() — Doc as Code
+
+**Problem:** `TypedKey.string("DB_HOST", "localhost")` is ambiguous. Is `"localhost"` a safe production default or a development convenience? If it's a default, `validate()` won't catch missing config. If it's documentation, it shouldn't be returned as a value.
+
+**Solution:** Separate safe defaults from documentation with explicit builder methods:
+
+```java
+// Safe default — production-safe, validate() skips
+PORT(TypedKey.integer("SMTP_PORT").defaultsTo(587))
+
+// Documentation only — validate() catches, dump() shows description
+HOST(TypedKey.string("DB_HOST").describedAs("database hostname"))
+
+// Secret with description
+PASSWORD(TypedKey.secret("DB_PASSWORD").describedAs("app password"))
+```
+
+**dump() output:**
+```
+SMTP_PORT     = 587 (default)
+DB_HOST       = [MISSING] — database hostname
+DB_PASSWORD   = [MISSING] — app password (secret)
+```
+
+**Old 2-arg factories deprecated.** `TypedKey.string(key, default)` still works but is marked `@Deprecated`.

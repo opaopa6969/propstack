@@ -6,9 +6,10 @@
 
 ```java
 enum Db implements KeyHolder {
-    HOST(TypedKey.string("DB_HOST", "localhost")),
-    PORT(TypedKey.integer("DB_PORT", 5432)),
-    NAME(TypedKey.string("DB_NAME"));
+    HOST(TypedKey.string("DB_HOST").describedAs("database hostname")),
+    PORT(TypedKey.integer("DB_PORT").defaultsTo(5432)),
+    NAME(TypedKey.string("DB_NAME")),
+    PASSWORD(TypedKey.secret("DB_PASSWORD"));
 
     private final TypedKey<?> key;
     Db(TypedKey<?> key) { this.key = key; }
@@ -16,12 +17,17 @@ enum Db implements KeyHolder {
 }
 
 PropStack props = new PropStack();
-String host = props.get(Db.HOST);     // String — type-safe
-int port = props.get(Db.PORT);        // int — type-safe
-String name = props.require(Db.NAME); // throws if missing
+props.validate(Db.class);            // reports ALL missing keys at once
+String host = props.require(Db.HOST); // type-safe, throws if missing
+int port = props.get(Db.PORT);        // 5432 (safe default)
+System.out.print(props.dump(Db.class));
+// DB_HOST     = prod-db.internal
+// DB_PORT     = 5432 (default)
+// DB_NAME     = myapp
+// DB_PASSWORD = ****** (secret)
 ```
 
-Type-safe. Stackable. Grouped by feature. Zero dependencies.
+Type-safe. Doc as code. Secrets masked. Zero dependencies.
 
 ## Why?
 
@@ -42,7 +48,7 @@ It also includes `Registry` — a minimal component registry for people who don'
 | `PropStack` | Stackable property resolver |
 | `Registry` | Named + typed component registry |
 | `RegistryKey<T>` | Interface for type-safe catalog enums |
-| `TypedKey<T>` | Type-safe property key with default value |
+| `TypedKey<T>` | Type-safe property key with `.defaultsTo()`, `.describedAs()`, `.secret()` |
 | `KeyHolder` | Interface for enums that hold TypedKey |
 | `PropertySource` | Pluggable property source interface |
 | `ApplicationProperties` | Backward-compatible alias for PropStack |
@@ -68,7 +74,7 @@ It also includes `Registry` — a minimal component registry for people who don'
 <dependency>
     <groupId>org.unlaxer</groupId>
     <artifactId>propstack</artifactId>
-    <version>0.1.0</version>
+    <version>0.7.0</version>
 </dependency>
 ```
 
@@ -112,16 +118,63 @@ DB_URL=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
 
 `${VAR}` is resolved from system properties and environment variables.
 
-### Typed Keys (optional)
+### Typed Keys with KeyHolder
 
 ```java
-enum Config implements PropertyKey {
-    DB_HOST, DB_PORT, DB_NAME;
-    public String key() { return name(); }
+enum Smtp implements KeyHolder {
+    HOST(TypedKey.string("SMTP_HOST").describedAs("SMTP server hostname")),
+    PORT(TypedKey.integer("SMTP_PORT").defaultsTo(587)),
+    USER(TypedKey.string("SMTP_USER")),
+    PASSWORD(TypedKey.secret("SMTP_PASSWORD").describedAs("Gmail app password")),
+    ORIGINS(TypedKey.stringList("ALLOWED_ORIGINS"));
+
+    private final TypedKey<?> key;
+    Smtp(TypedKey<?> key) { this.key = key; }
+    public TypedKey<?> typedKey() { return key; }
 }
 
-String host = props.get(Config.DB_HOST).orElse("localhost");
+String host = props.require(Smtp.HOST);           // throws if missing
+int port = props.get(Smtp.PORT);                   // 587 (safe default)
+List<String> origins = props.get(Smtp.ORIGINS);    // comma-separated → List
 ```
+
+**Key design:**
+- `.defaultsTo(value)` — production-safe default (e.g. port 587). `validate()` skips it.
+- `.describedAs("text")` — documentation only. `validate()` catches it. `dump()` shows it.
+- `.secret()` — masked as `******` in `dump()`.
+
+### validate() — Bulk Validation
+
+```java
+props.validate(Smtp.class, Db.class);
+// → IllegalStateException: Missing required properties: [SMTP_HOST, SMTP_USER, DB_NAME]
+```
+
+Reports ALL missing keys at once. Spring fails one by one.
+
+### dump() — Diagnostic Output
+
+```java
+System.out.print(props.dump(Smtp.class));
+// --- Smtp ---
+//   SMTP_HOST     = smtp.gmail.com
+//   SMTP_PORT     = 587 (default)
+//   SMTP_USER     = me@gmail.com
+//   SMTP_PASSWORD = ****** (secret)
+//   ALLOWED_ORIGINS = [MISSING]
+```
+
+### trace() — Source Tracking
+
+```java
+System.out.print(props.trace("DB_HOST"));
+// DB_HOST:
+//   [0] set()               → (empty)
+//   [1] SystemProperties    → (empty)
+//   [2] EnvironmentVariables → prod-db  ← MATCH
+```
+
+Shows exactly which source a value comes from. Spring can't do this.
 
 ***
 
@@ -294,6 +347,10 @@ See [docs/design-decisions.md](docs/design-decisions.md) for the full record of 
 - DD-002: Naming
 - DD-003: TypedKey enum pattern
 - DD-004: No object construction in PropStack
+- DD-005: Features from fraud-alert
+- DD-006: Stack insertion via defaultSources()
+- DD-007: Competitive analysis (List, secret, dump, trace)
+- DD-008: defaultsTo() vs describedAs() — Doc as Code
 
 ## Requirements
 
