@@ -34,7 +34,28 @@ System.out.print(props.dump(Db.class));
 
 Type-safe. Doc as code. Secrets masked. Zero dependencies.
 
-## Why?
+## The Problem Nobody Solved
+
+Your team has 5 developers. Each has a different local DB host, a different port, a different API key. What do they do?
+
+| What people do | What goes wrong |
+|---------------|-----------------|
+| Edit `application.properties` and pray nobody commits it | Merge conflicts. Leaked credentials. |
+| Copy to `application-local.properties` + `.gitignore` | Not in Spring docs. New members don't know about it. |
+| Set environment variables | Every dev has to maintain their own shell profile. No documentation. |
+| Use Spring profiles | Profiles are for environments (dev/prod), not for people. |
+
+**PropStack solves this:**
+
+```java
+PropStack props = new PropStack("myapp",
+    PropertySource.forUser()  // Alice → application.user_alice.properties
+);
+```
+
+Each developer creates `application.user_{name}.properties` with only the keys they need to override. Committed to git (no secrets — those go in `~/`). No merge conflicts. Self-documenting. **No other config library has this.**
+
+## Why PropStack?
 
 Every config library wants you to buy into a framework:
 - Spring Boot → `@Value` + `@Configuration` + DI container + proxy magic

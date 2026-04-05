@@ -34,6 +34,27 @@ System.out.print(props.dump(Db.class));
 
 型安全。Doc as code。シークレットマスク。依存ゼロ。
 
+## 誰も解決してなかった問題
+
+チームに 5 人の開発者がいる。全員ローカルの DB ホストが違う。ポートも違う。API キーも違う。どうする？
+
+| みんなやってること | 何が起きるか |
+|------------------|------------|
+| `application.properties` を編集して誰もコミットしないことを祈る | マージコンフリクト。認証情報漏洩。 |
+| `application-local.properties` にコピーして `.gitignore` | Spring のドキュメントにない。新メンバーが知らない。 |
+| 環境変数を設定 | 全員がシェルプロファイルを自分で管理。ドキュメントなし。 |
+| Spring profile を使う | profile は環境 (dev/prod) 用であって人用じゃない。 |
+
+**PropStack はこれを解決する:**
+
+```java
+PropStack props = new PropStack("myapp",
+    PropertySource.forUser()  // Alice → application.user_alice.properties
+);
+```
+
+各開発者が `application.user_{名前}.properties` を作って、変えたいキーだけ書く。git にコミットできる（シークレットは `~/` に）。マージコンフリクトなし。自己文書化。**この機能を持つ設定ライブラリは他にない。**
+
 ## なぜ PropStack か？
 
 既存の設定ライブラリは全て「フレームワークに乗れ」と言ってくる:
