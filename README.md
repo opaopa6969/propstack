@@ -406,6 +406,18 @@ Registry
       └── "myCustomName"                        → by string
 ```
 
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [Getting Started](docs/getting-started.md) | Maven setup, first steps, per-developer overrides |
+| [API Cookbook](docs/api-cookbook.md) | Every method with examples (trace, fromPath, defaultsTo, describedAs, validate) |
+| [Architecture](docs/architecture.md) | List\<PropertySource\> stack, TypedKey record, Registry ConcurrentHashMap, first-match-wins |
+| [Design Decisions](docs/design-decisions.md) | DD-001 through DD-008 with rationale |
+| [1.0 Remaining Tasks](docs/decisions/DD-009-1.0-remaining-tasks.md) | CI badge, Javadoc site, open API questions |
+
+> **Note:** CI badge is not yet configured. See [DD-009](docs/decisions/DD-009-1.0-remaining-tasks.md).
+
 ## Design Decisions
 
 See [docs/design-decisions.md](docs/design-decisions.md) for the full record of architectural choices, including:
@@ -417,6 +429,7 @@ See [docs/design-decisions.md](docs/design-decisions.md) for the full record of 
 - DD-006: Stack insertion via defaultSources()
 - DD-007: Competitive analysis (List, secret, dump, trace)
 - DD-008: defaultsTo() vs describedAs() — Doc as Code
+- DD-009: 1.0 remaining tasks (CI, Javadoc, open API questions)
 
 ## Requirements
 

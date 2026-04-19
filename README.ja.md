@@ -406,6 +406,18 @@ Registry
       └── "myCustomName"                        → 文字列で取得
 ```
 
+## ドキュメント
+
+| ドキュメント | 内容 |
+|-------------|------|
+| [はじめる](docs/getting-started-ja.md) | Maven 設定、基本例、開発者ごとのオーバーライド |
+| [API クックブック](docs/api-cookbook-ja.md) | 全メソッドの使用例 (trace, fromPath, defaultsTo, describedAs, validate) |
+| [アーキテクチャ](docs/architecture-ja.md) | List\<PropertySource\> スタック構造、TypedKey レコード、Registry ConcurrentHashMap |
+| [設計判断](docs/design-decisions.ja.md) | DD-001〜DD-008 と根拠 |
+| [1.0 残タスク](docs/decisions/DD-009-1.0-remaining-tasks.md) | CI バッジ、Javadoc サイト、未解決 API 課題 |
+
+> **注意:** CI バッジは未設置。[DD-009](docs/decisions/DD-009-1.0-remaining-tasks.md) を参照。
+
 ## 設計判断
 
 [docs/design-decisions.ja.md](docs/design-decisions.ja.md) に全設計判断の記録:
@@ -417,6 +429,7 @@ Registry
 - DD-006: defaultSources() によるスタック差し込み
 - DD-007: 競合分析 (List, secret, dump, trace)
 - DD-008: defaultsTo() vs describedAs() — Doc as Code
+- DD-009: 1.0 残タスク（CI、Javadoc、未解決 API 課題）
 
 ## 要件
 
