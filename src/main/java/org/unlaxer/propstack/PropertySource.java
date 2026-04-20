@@ -118,11 +118,26 @@ public interface PropertySource {
         };
     }
 
+    /**
+     * Load a properties file from the given path.
+     *
+     * <p>If the file does not exist or cannot be read, it is silently skipped
+     * (returns an empty source). A {@code WARN} message is emitted to
+     * {@link System#err} when the path exists but fails to load, so that
+     * accidental permission errors or corrupt files are not invisible.</p>
+     *
+     * @param path filesystem path to the properties file
+     * @return a PropertySource backed by the loaded file, or empty if not found
+     */
     static PropertySource fromPath(Path path) {
         Properties props = new Properties();
         try (InputStream is = Files.newInputStream(path)) {
             props.load(is);
-        } catch (Exception ignored) {}
+        } catch (java.nio.file.NoSuchFileException ignored) {
+            // file simply does not exist — expected for optional sources
+        } catch (Exception e) {
+            System.err.println("[PropStack] WARN: fromPath ignored path " + path + " — " + e.getMessage());
+        }
         return of(props);
     }
 

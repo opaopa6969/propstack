@@ -1,5 +1,6 @@
 # PropStack
 
+[![CI](https://github.com/opaopa6969/propstack/actions/workflows/ci.yml/badge.svg)](https://github.com/opaopa6969/propstack/actions/workflows/ci.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/org.unlaxer/propstack)](https://central.sonatype.com/artifact/org.unlaxer/propstack)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Java 21+](https://img.shields.io/badge/Java-21%2B-blue)](https://openjdk.org/)
@@ -416,7 +417,6 @@ Registry
 | [Design Decisions](docs/design-decisions.md) | DD-001 through DD-008 with rationale |
 | [1.0 Remaining Tasks](docs/decisions/DD-009-1.0-remaining-tasks.md) | CI badge, Javadoc site, open API questions |
 
-> **Note:** CI badge is not yet configured. See [DD-009](docs/decisions/DD-009-1.0-remaining-tasks.md).
 
 ## Design Decisions
 

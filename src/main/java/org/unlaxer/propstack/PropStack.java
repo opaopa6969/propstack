@@ -359,6 +359,47 @@ public class PropStack implements PropertySource {
         return trace(holder.typedKey().key());
     }
 
+    /**
+     * Trace multiple keys at once. Convenience wrapper around {@link #trace(String)}.
+     *
+     * <pre>
+     * List&lt;String&gt; report = props.traceAll("DB_HOST", "DB_PORT", "JWT_SECRET");
+     * report.forEach(System.out::print);
+     * </pre>
+     *
+     * @param keys one or more property key names to trace
+     * @return list of trace report strings, one per key, in the same order as {@code keys}
+     */
+    public List<String> traceAll(String... keys) {
+        List<String> results = new ArrayList<>();
+        for (String key : keys) {
+            results.add(trace(key));
+        }
+        return results;
+    }
+
+    /**
+     * Trace all keys from the given {@link KeyHolder} enums.
+     *
+     * <pre>
+     * props.traceAll(Smtp.class, Db.class).forEach(System.out::print);
+     * </pre>
+     *
+     * @param keyHolderClasses KeyHolder enum classes whose keys should be traced
+     * @return list of trace report strings, one per key
+     */
+    @SafeVarargs
+    public final List<String> traceAll(Class<? extends KeyHolder>... keyHolderClasses) {
+        List<String> results = new ArrayList<>();
+        for (Class<? extends KeyHolder> clazz : keyHolderClasses) {
+            if (!clazz.isEnum()) continue;
+            for (KeyHolder holder : clazz.getEnumConstants()) {
+                results.add(trace(holder.typedKey().key()));
+            }
+        }
+        return results;
+    }
+
     // ---- convert ----
 
     @SuppressWarnings("unchecked")
