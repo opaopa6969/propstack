@@ -392,19 +392,21 @@ Singletons.put(MyClass.class, instance);
 
 ## How It Works
 
-```
-PropStack
-  ├── [0] in-memory overrides (set() calls)
-  ├── [1] System.getProperty()          ← -D flags
-  ├── [2] System.getenv()               ← environment
-  ├── [3] ~/.<appName>/app.properties   ← user file (when appName specified)
-  └── [4] classpath app.properties      ← defaults
+```mermaid
+flowchart TD
+    PS[PropStack]
+    PS --> P0["[0] in-memory overrides<br/>(set() calls)"]
+    PS --> P1["[1] System.getProperty()<br/>-D flags"]
+    PS --> P2["[2] System.getenv()<br/>environment"]
+    PS --> P3["[3] ~/.&lt;appName&gt;/app.properties<br/>user file (when appName specified)"]
+    PS --> P4["[4] classpath app.properties<br/>defaults"]
 
-Registry
-  └── ConcurrentHashMap<String, Object>
-      ├── "com.example.DataSource"              → by class
-      ├── "com.example.DataSource#PROD"         → by RegistryKey
-      └── "myCustomName"                        → by string
+    Reg[Registry]
+    Map["ConcurrentHashMap&lt;String, Object&gt;"]
+    Reg --> Map
+    Map --> K1["'com.example.DataSource'<br/>by class"]
+    Map --> K2["'com.example.DataSource#PROD'<br/>by RegistryKey"]
+    Map --> K3["'myCustomName'<br/>by string"]
 ```
 
 ## Documentation

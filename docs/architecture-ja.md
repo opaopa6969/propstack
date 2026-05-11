@@ -158,21 +158,30 @@ DB_HOST:
 
 ## データフロー
 
-```
-application.properties  ─┐
-ユーザーオーバーライド    ─┤  List<PropertySource>  →  PropStack.get(key)
-env vars / -D フラグ     ─┤                             │
-set() 上書き             ─┘                             │
-                                                        ▼
-                                         TypedKey.convert(String → T)
-                                                        │
-                                                        ▼
-                                  T (String / int / boolean / List / ...)
+```mermaid
+flowchart TD
+    AP["application.properties"]
+    UO["ユーザーオーバーライド"]
+    EV["env vars / -D フラグ"]
+    SO["set() 上書き"]
+    Sources["List&lt;PropertySource&gt;"]
+    Get["PropStack.get(key)"]
+    Convert["TypedKey.convert(String → T)"]
+    Result["T (String / int / boolean / List / ...)"]
 
-PropStack.validate()  → 全不足 TypedKey を収集（デフォルトなし、値なし）→ まとめて例外
-PropStack.dump()      → 全 KeyHolder エントリを値/デフォルト/シークレット/不足で整形
-PropStack.trace()     → 1 キーのソースを走査、最初のマッチで停止
+    AP --> Sources
+    UO --> Sources
+    EV --> Sources
+    SO --> Sources
+    Sources --> Get
+    Get --> Convert
+    Convert --> Result
 ```
+
+他の操作:
+- `PropStack.validate()` → 全不足 TypedKey を収集（デフォルトなし、値なし）→ まとめて例外
+- `PropStack.dump()` → 全 KeyHolder エントリを値/デフォルト/シークレット/不足で整形
+- `PropStack.trace()` → 1 キーのソースを走査、最初のマッチで停止
 
 ---
 

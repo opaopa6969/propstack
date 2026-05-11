@@ -158,21 +158,30 @@ Sources [3] and [4] are not printed, even if they also contain the key. This ref
 
 ## Data Flow
 
-```
-application.properties  ─┐
-user overrides           ─┤  List<PropertySource>  →  PropStack.get(key)
-env vars / -D flags      ─┤                             │
-set() overrides          ─┘                             │
-                                                        ▼
-                                              TypedKey.convert(String → T)
-                                                        │
-                                                        ▼
-                                              T (String / int / boolean / List / ...)
+```mermaid
+flowchart TD
+    AP["application.properties"]
+    UO["user overrides"]
+    EV["env vars / -D flags"]
+    SO["set() overrides"]
+    Sources["List&lt;PropertySource&gt;"]
+    Get["PropStack.get(key)"]
+    Convert["TypedKey.convert(String → T)"]
+    Result["T (String / int / boolean / List / ...)"]
 
-PropStack.validate()  → collect all missing TypedKey (no default, no value) → throw once
-PropStack.dump()      → format all KeyHolder entries with value/default/secret/missing
-PropStack.trace()     → walk sources for one key, stop at first match
+    AP --> Sources
+    UO --> Sources
+    EV --> Sources
+    SO --> Sources
+    Sources --> Get
+    Get --> Convert
+    Convert --> Result
 ```
+
+Other operations:
+- `PropStack.validate()` → collect all missing TypedKey (no default, no value) → throw once
+- `PropStack.dump()` → format all KeyHolder entries with value/default/secret/missing
+- `PropStack.trace()` → walk sources for one key, stop at first match
 
 ---
 

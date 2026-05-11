@@ -391,19 +391,21 @@ Singletons.put(MyClass.class, instance);
 
 ## 仕組み
 
-```
-PropStack
-  ├── [0] メモリ上の上書き (set() 呼び出し)
-  ├── [1] System.getProperty()     ← -D フラグ
-  ├── [2] System.getenv()          ← 環境変数
-  ├── [3] ~/.<appName>/app.properties  ← ユーザーファイル（appName 指定時）
-  └── [4] classpath app.properties ← デフォルト
+```mermaid
+flowchart TD
+    PS[PropStack]
+    PS --> P0["[0] メモリ上の上書き<br/>(set() 呼び出し)"]
+    PS --> P1["[1] System.getProperty()<br/>-D フラグ"]
+    PS --> P2["[2] System.getenv()<br/>環境変数"]
+    PS --> P3["[3] ~/.&lt;appName&gt;/app.properties<br/>ユーザーファイル（appName 指定時）"]
+    PS --> P4["[4] classpath app.properties<br/>デフォルト"]
 
-Registry
-  └── ConcurrentHashMap<String, Object>
-      ├── "com.example.DataSource"              → クラスで取得
-      ├── "com.example.DataSource#PROD"         → RegistryKey で取得
-      └── "myCustomName"                        → 文字列で取得
+    Reg[Registry]
+    Map["ConcurrentHashMap&lt;String, Object&gt;"]
+    Reg --> Map
+    Map --> K1["'com.example.DataSource'<br/>クラスで取得"]
+    Map --> K2["'com.example.DataSource#PROD'<br/>RegistryKey で取得"]
+    Map --> K3["'myCustomName'<br/>文字列で取得"]
 ```
 
 ## ドキュメント
