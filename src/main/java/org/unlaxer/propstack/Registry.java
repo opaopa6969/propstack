@@ -7,23 +7,63 @@ import java.util.function.Supplier;
 /**
  * Application-scoped component registry. Named + typed.
  *
- * <p>Two modes of use:</p>
+ * <h2>Instance-first design</h2>
+ * <p>{@code Registry} is an instantiable class. Each instance has its own isolated
+ * component map, which means:</p>
+ * <ul>
+ *   <li>Parallel tests don't share state — create one {@code Registry} per test</li>
+ *   <li>Multiple independent app contexts can coexist in the same JVM</li>
+ *   <li>Libraries can use a private Registry without polluting the caller's</li>
+ * </ul>
  *
- * <h3>1. By class (one per type)</h3>
+ * <h3>Recommended: inject the registry</h3>
  * <pre>
- * Registry.put(DataSource.class, ds);
- * DataSource ds = Registry.get(DataSource.class);
+ * Registry registry = new Registry();
+ * registry.put(DataSource.class, createDataSource(props));
+ * MyService service = new MyService(registry.get(DataSource.class));
  * </pre>
  *
- * <h3>2. By RegistryKey (multiple per type, named)</h3>
+ * <h3>Global instance (when one process-wide registry is intentional)</h3>
+ * <pre>
+ * Registry.global().put(DataSource.class, ds);
+ * DataSource ds = Registry.global().get(DataSource.class);
+ * </pre>
+ *
+ * <h3>Named registries (module-level scoping)</h3>
+ * <pre>
+ * Registry app   = Registry.named("app");
+ * Registry infra = Registry.named("infra");
+ * // Same name always returns the same instance.
+ * </pre>
+ *
+ * <h3>Backward-compatible static API</h3>
+ * <p>Code using {@link Singletons} continues to work unchanged — it delegates to
+ * {@link #global()}. For direct static access, use {@code Registry.global().put(...)},
+ * which makes the intent explicit.</p>
+ *
+ * <h3>By RegistryKey (multiple instances of the same type)</h3>
  * <pre>
  * enum DB implements RegistryKey&lt;DataSource&gt; {
  *     PROD(DataSource.class), DEV(DataSource.class);
  *     // ...
  * }
- * Registry.put(DB.PROD, prodDs);
- * Registry.put(DB.DEV, devDs);
- * DataSource prod = Registry.get(DB.PROD);
+ * registry.put(DB.PROD, prodDs);
+ * DataSource prod = registry.get(DB.PROD);
+ * </pre>
+ *
+ * <h3>Test support</h3>
+ * <pre>
+ * // Preferred: fresh instance per test — no clear() needed
+ * class MyServiceTest {
+ *     private final Registry registry = new Registry();
+ *
+ *     {@literal @}BeforeEach void setUp() {
+ *         registry.put(DataSource.class, mockDataSource);
+ *     }
+ * }
+ *
+ * // Also works: shared instance with teardown
+ * {@literal @}AfterEach void cleanup() { Registry.global().clear(); }
  * </pre>
  *
  * <h3>Why not DI?</h3>
@@ -36,9 +76,33 @@ import java.util.function.Supplier;
  */
 public final class Registry {
 
-    private static final Map<String, Object> instances = new ConcurrentHashMap<>();
+    // ---- Factory ----
 
-    private Registry() {}
+    private static final Registry GLOBAL = new Registry();
+    private static final ConcurrentHashMap<String, Registry> NAMED = new ConcurrentHashMap<>();
+
+    /**
+     * Returns the process-wide global Registry instance.
+     * {@link Singletons} delegates here for backward compatibility.
+     */
+    public static Registry global() {
+        return GLOBAL;
+    }
+
+    /**
+     * Returns a named shared Registry, creating it if absent.
+     * Same name always returns the same instance within the same ClassLoader.
+     */
+    public static Registry named(String name) {
+        return NAMED.computeIfAbsent(name, k -> new Registry());
+    }
+
+    // ---- Instance ----
+
+    private final Map<String, Object> store = new ConcurrentHashMap<>();
+
+    /** Creates a new, empty, isolated Registry instance. */
+    public Registry() {}
 
     // ---- By class ----
 
@@ -46,8 +110,8 @@ public final class Registry {
      * Get or create by class. Uses no-arg constructor if not registered.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T get(Class<T> clazz) {
-        return (T) instances.computeIfAbsent(clazz.getName(), k -> {
+    public <T> T get(Class<T> clazz) {
+        return (T) store.computeIfAbsent(clazz.getName(), k -> {
             try {
                 return clazz.getDeclaredConstructor().newInstance();
             } catch (Exception e) {
@@ -60,15 +124,15 @@ public final class Registry {
      * Get or create by class with custom supplier.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T get(Class<T> clazz, Supplier<T> supplier) {
-        return (T) instances.computeIfAbsent(clazz.getName(), k -> supplier.get());
+    public <T> T get(Class<T> clazz, Supplier<T> supplier) {
+        return (T) store.computeIfAbsent(clazz.getName(), k -> supplier.get());
     }
 
     /**
      * Register by class.
      */
-    public static <T> void put(Class<T> clazz, T instance) {
-        instances.put(clazz.getName(), instance);
+    public <T> void put(Class<T> clazz, T instance) {
+        store.put(clazz.getName(), instance);
     }
 
     // ---- By RegistryKey (named) ----
@@ -77,23 +141,23 @@ public final class Registry {
      * Get by named key.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T get(RegistryKey<T> key) {
-        return (T) instances.get(keyName(key));
+    public <T> T get(RegistryKey<T> key) {
+        return (T) store.get(keyName(key));
     }
 
     /**
      * Get by named key, or create with supplier.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T get(RegistryKey<T> key, Supplier<T> supplier) {
-        return (T) instances.computeIfAbsent(keyName(key), k -> supplier.get());
+    public <T> T get(RegistryKey<T> key, Supplier<T> supplier) {
+        return (T) store.computeIfAbsent(keyName(key), k -> supplier.get());
     }
 
     /**
      * Register by named key.
      */
-    public static <T> void put(RegistryKey<T> key, T instance) {
-        instances.put(keyName(key), instance);
+    public <T> void put(RegistryKey<T> key, T instance) {
+        store.put(keyName(key), instance);
     }
 
     // ---- By string name ----
@@ -102,57 +166,63 @@ public final class Registry {
      * Get by arbitrary string name.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T get(String name) {
-        return (T) instances.get(name);
+    public <T> T get(String name) {
+        return (T) store.get(name);
     }
 
     /**
      * Get by string name, or create with supplier.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T get(String name, Supplier<T> supplier) {
-        return (T) instances.computeIfAbsent(name, k -> supplier.get());
+    public <T> T get(String name, Supplier<T> supplier) {
+        return (T) store.computeIfAbsent(name, k -> supplier.get());
     }
 
     /**
      * Register by string name.
      */
-    public static void put(String name, Object instance) {
-        instances.put(name, instance);
+    public void put(String name, Object instance) {
+        store.put(name, instance);
     }
 
     // ---- Management ----
 
-    public static void remove(Class<?> clazz) {
-        instances.remove(clazz.getName());
+    public void remove(Class<?> clazz) {
+        store.remove(clazz.getName());
     }
 
-    public static <T> void remove(RegistryKey<T> key) {
-        instances.remove(keyName(key));
+    public <T> void remove(RegistryKey<T> key) {
+        store.remove(keyName(key));
     }
 
-    public static void remove(String name) {
-        instances.remove(name);
+    public void remove(String name) {
+        store.remove(name);
     }
 
     /**
-     * Clear all. Call in test @AfterEach.
+     * Clear all entries in this registry.
+     *
+     * <p>With the instance-per-test pattern, {@code clear()} is usually unnecessary —
+     * just create a new {@code Registry()} per test. Use {@code clear()} only
+     * when deliberately sharing an instance across tests.</p>
      */
-    public static void clear() {
-        instances.clear();
+    public void clear() {
+        store.clear();
     }
 
-    public static boolean contains(Class<?> clazz) {
-        return instances.containsKey(clazz.getName());
+    public boolean contains(Class<?> clazz) {
+        return store.containsKey(clazz.getName());
     }
 
-    public static <T> boolean contains(RegistryKey<T> key) {
-        return instances.containsKey(keyName(key));
+    public <T> boolean contains(RegistryKey<T> key) {
+        return store.containsKey(keyName(key));
     }
 
-    public static int size() {
-        return instances.size();
+    public int size() {
+        return store.size();
     }
+
+    // ---- Internal ----
 
     private static String keyName(RegistryKey<?> key) {
         return key.type().getName() + "#" + key.name();

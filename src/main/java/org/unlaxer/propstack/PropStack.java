@@ -229,6 +229,12 @@ public class PropStack implements PropertySource {
      * String host = props.get(Smtp.HOST);
      * int port = props.get(Smtp.PORT);
      * </pre>
+     *
+     * <p><b>Cast note:</b> {@link KeyHolder#typedKey()} returns {@code TypedKey<?>} because
+     * Java enums cannot be generic. The unchecked cast to {@code T} here is safe as long
+     * as the KeyHolder enum constant and its TypedKey are consistent — which is trivially
+     * true when the TypedKey is declared inline at the enum constant (the standard pattern).
+     * The cast is localized here so callers never need to cast.</p>
      */
     @SuppressWarnings("unchecked")
     public <T> T get(KeyHolder holder) {
@@ -249,6 +255,9 @@ public class PropStack implements PropertySource {
 
     /**
      * Require a typed value from a KeyHolder enum.
+     * Throws {@link IllegalStateException} if missing and no default.
+     *
+     * <p>Same cast reasoning as {@link #get(KeyHolder)} — safe for standard KeyHolder enums.</p>
      */
     @SuppressWarnings("unchecked")
     public <T> T require(KeyHolder holder) {

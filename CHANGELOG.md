@@ -6,11 +6,33 @@ Published to Maven Central as `org.unlaxer:propstack`.
 
 ## [Unreleased]
 
-### Planned for 1.0
-- CI badge (GitHub Actions workflow not yet configured)
-- Javadoc site deployment
-- `PropStack.defaultSources()` public helper promotion
-- Possible: `TypedKey.longKey()` / `TypedKey.doubleKey()` factory aliases
+### Planned post-1.0
+- Javadoc site deployment to GitHub Pages
+- JaCoCo coverage integration (target ≥ 80%)
+- Thread-safe `set()` on the `first` source
+- `trace()` option to keep scanning past the first match
+
+## [1.0.0] - 2026-05-14
+
+### Changed (BREAKING)
+- **`Registry` is instance-first.** The class is now instantiable; each `new Registry()` holds an isolated component map. Use `Registry.global()` for the process-wide singleton or `Registry.named("module")` for shared named instances.
+- **Static `Registry.put(...)` / `Registry.get(...)` etc. are removed.** Callers must use either an instance (`new Registry()` / `Registry.global()` / `Registry.named(...)`) or the `Singletons` facade, which now delegates to `Registry.global()` for backward compatibility.
+- `Registry.clear()` is an instance method; previously-static call sites should migrate to `Registry.global().clear()` or `Singletons.clear()`.
+
+### Migration
+- `Registry.put(X.class, x)` → `Singletons.put(X.class, x)` *or* `Registry.global().put(X.class, x)`
+- `Registry.get(X.class)` → `Singletons.get(X.class)` *or* `Registry.global().get(X.class)`
+- Tests: prefer `Registry registry = new Registry();` per test — no `clear()` needed.
+
+### Added
+- `Registry.global()` — process-wide singleton accessor.
+- `Registry.named(String)` — named, lazily-initialized shared registries (same name returns the same instance).
+- `RegistryInstanceTest` covering instance isolation, `global()`, and `named()` semantics.
+
+### Documentation
+- Expanded Javadoc on `KeyHolder` and `PropStack.get(KeyHolder)` explaining why `TypedKey<?>` (enum generics limitation) and why the unchecked cast is safe.
+- README "Why PropStack?" section rewritten with a feature comparison table (vs. dotenv-java + enum / SmallRye Config) and a note on SmallRye Config as a valid alternative.
+- `spec/SPEC.md` updated to the new instance-first `Registry` API (§3.1.2, §6.1, §7.1.4, §7.2).
 
 ## [0.9.1] - 2026-04-19
 
@@ -68,7 +90,8 @@ Published to Maven Central as `org.unlaxer:propstack`.
 - `PropertyKey` interface for string-keyed enum patterns
 - Zero runtime dependencies
 
-[Unreleased]: https://github.com/opaopa6969/propstack/compare/v0.9.1...HEAD
+[Unreleased]: https://github.com/opaopa6969/propstack/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/opaopa6969/propstack/compare/v0.9.1...v1.0.0
 [0.9.1]: https://github.com/opaopa6969/propstack/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/opaopa6969/propstack/compare/v0.5.0...v0.9.0
 [0.5.0]: https://github.com/opaopa6969/propstack/releases/tag/v0.5.0

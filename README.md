@@ -58,11 +58,21 @@ Each developer creates `application.user_{name}.properties` with only the keys t
 
 ## Why PropStack?
 
-Every config library wants you to buy into a framework:
-- Spring Boot → `@Value` + `@Configuration` + DI container + proxy magic
-- MicroProfile Config → CDI + `@Inject` + `@ConfigProperty`
-- Typesafe Config → HOCON format + Scala ecosystem
-- owner → interfaces + annotations + magic proxies
+PropStack is not a Spring replacement. If you're already using Spring Boot or Quarkus, stay there — this library is for **plain Java applications and libraries** that don't want a DI framework.
+
+Here's what PropStack adds over the minimal baseline (`dotenv-java` + plain enum):
+
+| Feature | dotenv-java + enum | SmallRye Config (standalone) | PropStack |
+|---|---|---|---|
+| Type-safe key definitions | ❌ raw strings | △ annotations | ✅ TypedKey enum |
+| All-at-once bulk validation | ❌ | ❌ one-by-one | ✅ `validate()` |
+| Secret masking in logs | ❌ | ❌ | ✅ `.secret()` / `dump()` |
+| Source tracing (where does this value come from?) | ❌ | ❌ | ✅ `trace()` |
+| Per-developer override files | ❌ | ❌ | ✅ `forUser()` / `forHost()` |
+| Zero dependencies | ✅ | ❌ | ✅ |
+| Doc-as-code (inline description on key) | ❌ | ❌ | ✅ `.describedAs()` |
+
+**About SmallRye Config:** It's the lightweight MicroProfile Config implementation and runs fine outside CDI containers — it's genuinely comparable to PropStack in scope. If you're already in the MicroProfile/Quarkus ecosystem, SmallRye Config is the right choice. PropStack's edge over it is zero dependencies and the `forUser()` / `trace()` features.
 
 **PropStack has no opinions.** It reads properties. From multiple sources. First match wins.
 
@@ -247,14 +257,33 @@ Shows exactly which source a value comes from. Spring can't do this.
 
 ## Registry — Components
 
-### By class (one per type)
+### Instance-first (recommended)
 
 ```java
-Registry.put(DataSource.class, dataSource);
-DataSource ds = Registry.get(DataSource.class);
+Registry registry = new Registry();
+registry.put(DataSource.class, dataSource);
+DataSource ds = registry.get(DataSource.class);
 ```
 
-### By named key (multiple per type)
+Create one `Registry` per application context. **Don't use global state unless you mean it.**
+
+### Global instance (when one process-wide registry is intentional)
+
+```java
+// The name makes the intent explicit
+Registry.global().put(DataSource.class, ds);
+DataSource ds = Registry.global().get(DataSource.class);
+```
+
+### Named registries (module scoping)
+
+```java
+Registry app   = Registry.named("app");
+Registry infra = Registry.named("infra");
+// Same name always returns the same instance.
+```
+
+### By named key (multiple instances of the same type)
 
 ```java
 enum DB implements RegistryKey<DataSource> {
@@ -266,34 +295,54 @@ enum DB implements RegistryKey<DataSource> {
     public Class<DataSource> type() { return type; }
 }
 
-Registry.put(DB.PROD, prodDataSource);
-Registry.put(DB.DEV, devDataSource);
+registry.put(DB.PROD, prodDataSource);
+registry.put(DB.DEV, devDataSource);
 
-DataSource prod = Registry.get(DB.PROD);  // type-safe
-DataSource dev = Registry.get(DB.DEV);    // same type, different instance
+DataSource prod = registry.get(DB.PROD);  // type-safe
+DataSource dev  = registry.get(DB.DEV);   // same type, different instance
 ```
 
 ### Lazy initialization
 
 ```java
 // Created on first get(), cached for subsequent calls
-DataSource ds = Registry.get(DataSource.class, () -> createDataSource(props));
+DataSource ds = registry.get(DataSource.class, () -> createDataSource(props));
 ```
 
 ### Test support
 
 ```java
-@AfterEach
-void cleanup() {
-    Registry.clear();  // reset all
+// Preferred: fresh instance per test — no clear() needed
+class MyServiceTest {
+    private final Registry registry = new Registry();
+
+    @BeforeEach void setUp() {
+        registry.put(DataSource.class, mockDataSource);
+    }
 }
 
-@Test
-void test() {
-    Registry.put(DataSource.class, mockDataSource);  // mock injection
-    // ...
+// Also works: shared instance with teardown
+@AfterEach
+void cleanup() {
+    Registry.global().clear();  // explicit: clears the global registry
 }
 ```
+
+### Static API (backward-compatible) — via `Singletons`
+
+Pre-0.10 code used the static `Singletons` facade. It still works: every call
+delegates to `Registry.global()`.
+
+```java
+Singletons.put(DataSource.class, dataSource);   // → Registry.global().put(...)
+DataSource ds = Singletons.get(DataSource.class); // → Registry.global().get(...)
+```
+
+`Registry` itself exposes **only instance methods plus the factories
+`Registry.global()` and `Registry.named(String)`**. Calls like
+`Registry.put(DataSource.class, ds)` will not compile — use `Singletons.put(...)`
+or `Registry.global().put(...)` instead. Making the global lookup explicit at the
+call site is the whole point of the instance-first redesign.
 
 ***
 
@@ -340,7 +389,8 @@ class MyService {
 }
 
 // Who injects? Your choice.
-new MyService(Registry.get(DataSource.class));  // Registry
+Registry registry = new Registry();
+new MyService(registry.get(DataSource.class));  // Registry
 new MyService(prodDs);                          // manual
 new MyService(mockDs);                          // test
 ```
@@ -368,10 +418,11 @@ new MyService(mockDs);                          // test
 // main.java — this is your "DI container". It's 10 lines. You can read it.
 PropStack props = new PropStack();
 DataSource ds = createDataSource(props);
-Registry.put(DataSource.class, ds);
+Registry registry = new Registry();
+registry.put(DataSource.class, ds);
 
-MyService service = new MyService(ds);     // constructor injection
-Registry.put(MyService.class, service);    // also in Registry for others
+MyService service = new MyService(ds);             // constructor injection
+registry.put(MyService.class, service);            // also in registry for others
 
 app.start();
 ```

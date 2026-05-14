@@ -9,36 +9,36 @@ class RegistryTest {
 
     @AfterEach
     void cleanup() {
-        Registry.clear();
+        Registry.global().clear();
     }
 
     // ---- By class ----
 
     @Test
     void getByClassCreatesInstance() {
-        PropStack props = Registry.get(PropStack.class);
+        PropStack props = Registry.global().get(PropStack.class);
         assertNotNull(props);
     }
 
     @Test
     void getByClassReturnsSame() {
-        PropStack a = Registry.get(PropStack.class);
-        PropStack b = Registry.get(PropStack.class);
+        PropStack a = Registry.global().get(PropStack.class);
+        PropStack b = Registry.global().get(PropStack.class);
         assertSame(a, b);
     }
 
     @Test
     void putByClassOverrides() {
         PropStack custom = new PropStack("test");
-        Registry.put(PropStack.class, custom);
-        assertSame(custom, Registry.get(PropStack.class));
+        Registry.global().put(PropStack.class, custom);
+        assertSame(custom, Registry.global().get(PropStack.class));
     }
 
     @Test
     void getByClassWithSupplier() {
-        PropStack props = Registry.get(PropStack.class, () -> new PropStack("custom"));
+        PropStack props = Registry.global().get(PropStack.class, () -> new PropStack("custom"));
         assertNotNull(props);
-        assertSame(props, Registry.get(PropStack.class));
+        assertSame(props, Registry.global().get(PropStack.class));
     }
 
     // ---- By RegistryKey (named) ----
@@ -54,57 +54,57 @@ class RegistryTest {
 
     @Test
     void namedKeyPutAndGet() {
-        Registry.put(TestDB.PROD, "jdbc:prod");
-        Registry.put(TestDB.DEV, "jdbc:dev");
-        assertEquals("jdbc:prod", Registry.get(TestDB.PROD));
-        assertEquals("jdbc:dev", Registry.get(TestDB.DEV));
+        Registry.global().put(TestDB.PROD, "jdbc:prod");
+        Registry.global().put(TestDB.DEV, "jdbc:dev");
+        assertEquals("jdbc:prod", Registry.global().get(TestDB.PROD));
+        assertEquals("jdbc:dev", Registry.global().get(TestDB.DEV));
     }
 
     @Test
     void namedKeyReturnsNullIfMissing() {
-        assertNull(Registry.get(TestDB.PROD));
+        assertNull(Registry.global().get(TestDB.PROD));
     }
 
     @Test
     void namedKeyWithSupplier() {
-        String url = Registry.get(TestDB.PROD, () -> "jdbc:default");
+        String url = Registry.global().get(TestDB.PROD, () -> "jdbc:default");
         assertEquals("jdbc:default", url);
-        assertSame(url, Registry.get(TestDB.PROD));
+        assertSame(url, Registry.global().get(TestDB.PROD));
     }
 
     @Test
     void namedKeyRemove() {
-        Registry.put(TestDB.PROD, "jdbc:prod");
-        assertTrue(Registry.contains(TestDB.PROD));
-        Registry.remove(TestDB.PROD);
-        assertFalse(Registry.contains(TestDB.PROD));
+        Registry.global().put(TestDB.PROD, "jdbc:prod");
+        assertTrue(Registry.global().contains(TestDB.PROD));
+        Registry.global().remove(TestDB.PROD);
+        assertFalse(Registry.global().contains(TestDB.PROD));
     }
 
     // ---- By string ----
 
     @Test
     void stringKeyPutAndGet() {
-        Registry.put("myService", "hello");
-        assertEquals("hello", Registry.get("myService"));
+        Registry.global().put("myService", "hello");
+        assertEquals("hello", Registry.global().get("myService"));
     }
 
     // ---- Management ----
 
     @Test
     void clearRemovesAll() {
-        Registry.put(TestDB.PROD, "a");
-        Registry.get(PropStack.class);
-        assertTrue(Registry.size() >= 2);
-        Registry.clear();
-        assertEquals(0, Registry.size());
+        Registry.global().put(TestDB.PROD, "a");
+        Registry.global().get(PropStack.class);
+        assertTrue(Registry.global().size() >= 2);
+        Registry.global().clear();
+        assertEquals(0, Registry.global().size());
     }
 
     @Test
     void sameTypeMultipleNames() {
-        Registry.put(TestDB.PROD, "prod-url");
-        Registry.put(TestDB.DEV, "dev-url");
-        assertNotEquals(Registry.get(TestDB.PROD), Registry.get(TestDB.DEV));
-        assertEquals(2, Registry.size());
+        Registry.global().put(TestDB.PROD, "prod-url");
+        Registry.global().put(TestDB.DEV, "dev-url");
+        assertNotEquals(Registry.global().get(TestDB.PROD), Registry.global().get(TestDB.DEV));
+        assertEquals(2, Registry.global().size());
     }
 
     // ---- Singletons backward compat ----
@@ -113,6 +113,6 @@ class RegistryTest {
     void singletonsAliasWorks() {
         PropStack props = Singletons.get(PropStack.class);
         assertNotNull(props);
-        assertSame(props, Registry.get(PropStack.class));
+        assertSame(props, Registry.global().get(PropStack.class));
     }
 }
