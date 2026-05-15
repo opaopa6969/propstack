@@ -80,16 +80,30 @@ It also includes `Registry` — a minimal component registry for people who don'
 
 ## What's Inside
 
-| Class | What it does |
-|-------|-------------|
-| `PropStack` | Stackable property resolver |
-| `Registry` | Named + typed component registry |
-| `RegistryKey<T>` | Interface for type-safe catalog enums |
-| `TypedKey<T>` | Type-safe property key with `.defaultsTo()`, `.describedAs()`, `.secret()` |
-| `KeyHolder` | Interface for enums that hold TypedKey |
-| `PropertySource` | Pluggable property source interface |
-| `ApplicationProperties` | Backward-compatible alias for PropStack |
-| `Singletons` | Backward-compatible alias for Registry |
+**The library is two things, not one — and they're not equal in weight.**
+
+The reason this library exists is `PropStack`: a properties resolver with type-safe
+keys, bulk validation, secret masking, source tracing, and per-developer overrides.
+That's the core value.
+
+`Registry` is a small **optional companion** — a named/typed component map for code
+that has opted out of a DI framework. It's bundled because it pairs naturally with
+`PropStack` (you read config, you wire components, you keep them somewhere), and
+because shipping one zero-deps jar is friendlier than two. **Use it if it fits; you
+can also ignore it entirely.** If you're already using Spring / Quarkus / Guice /
+Dagger / Micronaut for components, keep using them — `Registry` doesn't compete and
+isn't meant to.
+
+| Class | Role | What it does |
+|-------|------|-------------|
+| `PropStack` | **core** | Stackable property resolver |
+| `TypedKey<T>` | **core** | Type-safe property key with `.defaultsTo()`, `.describedAs()`, `.secret()` |
+| `KeyHolder` | **core** | Interface for enums that hold TypedKey |
+| `PropertySource` | **core** | Pluggable property source interface |
+| `Registry` | *optional* | Named + typed component registry |
+| `RegistryKey<T>` | *optional* | Interface for type-safe catalog enums |
+| `ApplicationProperties` | *legacy* | Backward-compatible alias for PropStack |
+| `Singletons` | *legacy* | Backward-compatible static facade for Registry |
 
 ***
 
@@ -256,6 +270,17 @@ Shows exactly which source a value comes from. Spring can't do this.
 ***
 
 ## Registry — Components
+
+> **Optional companion, not the headline feature.** `PropStack` is the reason this
+> library exists; `Registry` is a small bundled helper for projects that have
+> *also* opted out of a DI framework and need somewhere typed to keep their
+> components. If you're on Spring / Quarkus / Guice / Dagger / Micronaut, skip
+> this section — your DI container already does this, better.
+>
+> Why is it here at all? Because the same projects that want plain-Java config
+> (no `@ConfigProperty`, no `@Value`) usually also want plain-Java wiring (no
+> `@Inject`), and bundling both into one zero-deps jar keeps the dependency
+> footprint honest.
 
 ### Instance-first (recommended)
 
