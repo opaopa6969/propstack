@@ -33,7 +33,7 @@ implementation 'org.unlaxer:propstack:0.9.1'
 
 Latest version: [![Maven Central](https://img.shields.io/maven-central/v/org.unlaxer/propstack)](https://central.sonatype.com/artifact/org.unlaxer/propstack)
 
-> Note: CI badge is not yet configured. See [architecture.md — 1.0 Remaining Tasks](architecture.md#10-remaining-tasks).
+CI: [![CI](https://github.com/opaopa6969/propstack/actions/workflows/ci.yml/badge.svg)](https://github.com/opaopa6969/propstack/actions/workflows/ci.yml)
 
 ---
 

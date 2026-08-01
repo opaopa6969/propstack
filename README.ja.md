@@ -1,5 +1,6 @@
 # PropStack
 
+[![CI](https://github.com/opaopa6969/propstack/actions/workflows/ci.yml/badge.svg)](https://github.com/opaopa6969/propstack/actions/workflows/ci.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/org.unlaxer/propstack)](https://central.sonatype.com/artifact/org.unlaxer/propstack)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Java 21+](https://img.shields.io/badge/Java-21%2B-blue)](https://openjdk.org/)

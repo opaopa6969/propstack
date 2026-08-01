@@ -187,10 +187,10 @@ Other operations:
 
 ## 1.0 Remaining Tasks
 
-> CI badge is not yet configured. The following are tracked for 1.0.
+> CI is configured (`.github/workflows/ci.yml`, `mvn verify` on push/PR). The following are still tracked for 1.0.
 
-- [ ] GitHub Actions workflow (`mvn verify` on push/PR)
-- [ ] CI badge in README
+- [x] GitHub Actions workflow (`mvn verify` on push/PR)
+- [x] CI badge in README
 - [ ] Javadoc site (GitHub Pages)
 - [ ] `PropStack.defaultSources()` promoted to stable API documentation
 - [ ] Evaluate: `trace()` option to show all sources (not stop at first match)
