@@ -265,7 +265,7 @@ PropStack props = new PropStack("myapp",
 
 ```java
 var sources = PropStack.defaultSources("myapp");
-// sources = [SystemProperties, EnvironmentVariables, ~/.myapp/app.props, classpath app.props]
+// sources = [SystemProperties, EnvironmentVariables, ~/.myapp/application.properties, classpath application.properties]
 
 sources.add(2, new VaultPropertySource(vaultClient));  // env の後、ホームファイルの前
 

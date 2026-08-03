@@ -397,8 +397,8 @@ flowchart TD
     PS --> P0["[0] メモリ上の上書き<br/>(set() 呼び出し)"]
     PS --> P1["[1] System.getProperty()<br/>-D フラグ"]
     PS --> P2["[2] System.getenv()<br/>環境変数"]
-    PS --> P3["[3] ~/.&lt;appName&gt;/app.properties<br/>ユーザーファイル（appName 指定時）"]
-    PS --> P4["[4] classpath app.properties<br/>デフォルト"]
+    PS --> P3["[3] ~/.&lt;appName&gt;/application.properties<br/>ユーザーファイル（appName 指定時）"]
+    PS --> P4["[4] classpath application.properties<br/>デフォルト"]
 
     Reg[Registry]
     Map["ConcurrentHashMap&lt;String, Object&gt;"]

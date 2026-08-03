@@ -27,8 +27,8 @@ They are independent. `PropStack` reads strings. `Registry` manages objects. The
 sources[0]  in-memory overrides    (set() calls)          ← highest priority
 sources[1]  SystemProperties       (-D flags)
 sources[2]  EnvironmentVariables   (OS env)
-sources[3]  ~/.appName/app.props   (user home, optional)
-sources[n]  classpath app.props    (bundled defaults)     ← lowest priority
+sources[3]  ~/.appName/application.properties   (user home, optional)
+sources[n]  classpath application.properties    (bundled defaults)     ← lowest priority
 ```
 
 The list is a plain `java.util.ArrayList`. There is no insertion API — you manipulate it directly via `PropStack.defaultSources(appName)` and standard `List` operations (DD-006).

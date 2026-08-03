@@ -474,8 +474,8 @@ flowchart TD
     PS --> P0["[0] in-memory overrides<br/>(set() calls)"]
     PS --> P1["[1] System.getProperty()<br/>-D flags"]
     PS --> P2["[2] System.getenv()<br/>environment"]
-    PS --> P3["[3] ~/.&lt;appName&gt;/app.properties<br/>user file (when appName specified)"]
-    PS --> P4["[4] classpath app.properties<br/>defaults"]
+    PS --> P3["[3] ~/.&lt;appName&gt;/application.properties<br/>user file (when appName specified)"]
+    PS --> P4["[4] classpath application.properties<br/>defaults"]
 
     Reg[Registry]
     Map["ConcurrentHashMap&lt;String, Object&gt;"]

@@ -21,14 +21,14 @@ PropStack は複数のソースから設定を読み込み、アプリケーシ�
 <dependency>
     <groupId>org.unlaxer</groupId>
     <artifactId>propstack</artifactId>
-    <version>0.9.1</version>
+    <version>0.9.2</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```groovy
-implementation 'org.unlaxer:propstack:0.9.1'
+implementation 'org.unlaxer:propstack:0.9.2'
 ```
 
 最新バージョン: [![Maven Central](https://img.shields.io/maven-central/v/org.unlaxer/propstack)](https://central.sonatype.com/artifact/org.unlaxer/propstack)

@@ -27,8 +27,8 @@ PropStack は 2 つの直交する関心事を持つ:
 sources[0]  インメモリ上書き         (set() 呼び出し)          ← 最優先
 sources[1]  SystemProperties        (-D フラグ)
 sources[2]  EnvironmentVariables    (OS 環境変数)
-sources[3]  ~/.appName/app.props    (ユーザーホーム、任意)
-sources[n]  classpath app.props     (JAR 内デフォルト)        ← 最低優先
+sources[3]  ~/.appName/application.properties    (ユーザーホーム、任意)
+sources[n]  classpath application.properties     (JAR 内デフォルト)        ← 最低優先
 ```
 
 リストは plain な `java.util.ArrayList`。挿入用 API は別途設けない — `PropStack.defaultSources(appName)` で取得し、標準の `List` 操作で操作する（DD-006）。

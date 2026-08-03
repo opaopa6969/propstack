@@ -211,7 +211,7 @@ PropStack props = new PropStack(true,
 );
 ```
 
-> **Warning:** `fromPath()` silently ignores files that do not exist, are unreadable, or have parse errors. A typo in the path produces no error. Use `trace()` to confirm a path source is loading.
+> **Warning:** `fromPath()` ignores files that do not exist. If an existing file cannot be read or parsed, it is ignored and a warning is written to `System.err`. A typo in the path produces no error. Use `trace()` to confirm a path source is loading.
 
 ### `PropertySource.fromClasspath(String)`
 
@@ -265,7 +265,7 @@ When: Inserting a custom source at a specific position (e.g. Vault, Consul) (DD-
 
 ```java
 var sources = PropStack.defaultSources("myapp");
-// sources = [SystemProperties, EnvironmentVariables, ~/.myapp/app.props, classpath app.props]
+// sources = [SystemProperties, EnvironmentVariables, ~/.myapp/application.properties, classpath application.properties]
 
 sources.add(2, new VaultPropertySource(vaultClient));  // after env, before home file
 
