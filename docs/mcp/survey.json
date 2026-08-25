@@ -1,0 +1,46 @@
+{
+  "repo": "propstack",
+  "surveyed_at": "2026-08-22T08:05:00+09:00",
+  "kind": "library",
+  "summary": "Java 21+ 向けゼロ依存のプロパティスタックライブラリ。PropStack（カスケーディングプロパティ解決）と Registry（サービスロケーター）の2モジュールからなる。Maven Central 公開済み。起動1ms未満、インメモリのみ、永続化・常駐プロセスなし。",
+  "decision": "skip",
+  "decision_reason": "純粋なJavaライブラリであり、エージェントが外からHTTP/stdioで呼ぶべき常駐能力を持たない。全機能はJVMプロセス内で完結し、起動1ms未満のため常駐サーバ化する価値がない。プロパティ解決・バリデーション・dump/traceはアプリケーション組み込み用途であり、MCP toolとして公開してもエージェントが他サービスと組み合わせる絵が描けない。spec/guideドキュメントは既にMarkdown群として充実しており、MCP resource化しても追加価値が薄い。.mcp.jsonはissue-broker（別repo）のstdioクライアント設定であり、PropStack自体のMCPサーバではない。",
+  "existing": {
+    "http_api": false,
+    "cli": false,
+    "mcp": false,
+    "healthz": false,
+    "volta_manifest": false,
+    "hosted_url": null
+  },
+  "proposed_namespace": null,
+  "capabilities": [
+    { "verb": "プロパティをスタック順で解決する", "kind": "tool", "name": "resolve", "io": "{key, sources[]} → Optional<String>", "side_effect": "read", "long_running": false, "maps_to": "src/main/java/org/unlaxer/propstack/PropStack.java:getRawValue()" },
+    { "verb": "必須キーを一括バリデーションする", "kind": "tool", "name": "validate", "io": "KeyHolder enum classes → missing keys[]", "side_effect": "read", "long_running": false, "maps_to": "src/main/java/org/unlaxer/propstack/PropStack.java:validate()" },
+    { "verb": "設定状態をダンプする", "kind": "tool", "name": "dump", "io": "KeyHolder enum classes → formatted string (secrets masked)", "side_effect": "read", "long_running": false, "maps_to": "src/main/java/org/unlaxer/propstack/PropStack.java:dump()" },
+    { "verb": "値の由来ソースを追跡する", "kind": "tool", "name": "trace", "io": "key → source-by-source report", "side_effect": "read", "long_running": false, "maps_to": "src/main/java/org/unlaxer/propstack/PropStack.java:trace()" },
+    { "verb": "コンポーネントを登録・取得する", "kind": "tool", "name": "registry_get_put", "io": "class/name → instance", "side_effect": "write", "long_running": false, "maps_to": "src/main/java/org/unlaxer/propstack/Registry.java" },
+    { "verb": "能力の仕様", "kind": "resource", "name": "spec", "uri": "propstack://spec" },
+    { "verb": "使い方", "kind": "resource", "name": "guide", "uri": "propstack://guide" }
+  ],
+  "composition_examples": [],
+  "dependencies": [
+    { "repo": "issue-broker", "direction": "depends_on", "capability": "issue-broker MCP server (stdio)", "exists_now": true, "note": ".mcp.json が issue-broker の stdio クライアント設定を含む。propstack 側からissue-brokerを利用する構成。プロパティ管理とは無関係。" }
+  ],
+  "library_serve": {
+    "needed": false,
+    "new_work": [],
+    "runtime": "java",
+    "estimated_effort": "S"
+  },
+  "risks": [
+    "PropStackはインメモリのみで状態を持たないため、MCPサーバ化してもセッションをまたぐ状態管理が不要（＝常駐する意味がない）",
+    "Java 21+ が必要であり、volta基盤（Node/Python中心）にJVMランタイムを追加するコストが高い",
+    "プロパティ値にシークレットが含まれる可能性があり、リモートMCP経由で公開すると漏洩リスク",
+    "起動1ms未満のライブラリを常駐プロセスにするのは overhead に見合わない"
+  ],
+  "open_questions": [
+    "PropStackを使ったアプリケーションの設定検証をエージェント経由で行いたいユースケースがあるか？（あればskill-onlyで配布する手もある）",
+    "spec/SPEC.md（68KB）は既に機械可読性が高いが、MCP resource として配布することに持ち主が価値を見出すか"
+  ]
+}
