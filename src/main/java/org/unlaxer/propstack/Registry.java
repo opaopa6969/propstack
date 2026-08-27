@@ -108,6 +108,15 @@ public final class Registry {
 
     /**
      * Get or create by class. Uses no-arg constructor if not registered.
+     * Use {@link #contains(Class)} first when callers need to distinguish an
+     * existing registration from lazy creation.
+     *
+     * @param clazz class used as the registry key and for lazy creation
+     * @param <T> registered value type
+     * @return the registered or newly created instance
+     * @throws RuntimeException if the class is not already registered and
+     *                          cannot be instantiated through an accessible
+     *                          no-arg constructor
      */
     @SuppressWarnings("unchecked")
     public <T> T get(Class<T> clazz) {
