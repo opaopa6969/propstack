@@ -489,6 +489,7 @@ flowchart TD
 
 | Document | Description |
 |----------|-------------|
+| [Roadmap](ROADMAP.md) | v1.0.0 release checklist, release status, and public API freeze policy |
 | [Getting Started](docs/getting-started.md) | Maven setup, first steps, per-developer overrides |
 | [API Cookbook](docs/api-cookbook.md) | Every method with examples (trace, fromPath, defaultsTo, describedAs, validate) |
 | [Architecture](docs/architecture.md) | List\<PropertySource\> stack, TypedKey record, Registry ConcurrentHashMap, first-match-wins |
