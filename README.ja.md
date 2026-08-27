@@ -413,6 +413,7 @@ flowchart TD
 
 | ドキュメント | 内容 |
 |-------------|------|
+| [ロードマップ](ROADMAP.md) | v1.0.0 リリース基準、公開状況、public API freeze 方針 |
 | [はじめる](docs/getting-started-ja.md) | Maven 設定、基本例、開発者ごとのオーバーライド |
 | [API クックブック](docs/api-cookbook-ja.md) | 全メソッドの使用例 (trace, fromPath, defaultsTo, describedAs, validate) |
 | [アーキテクチャ](docs/architecture-ja.md) | List\<PropertySource\> スタック構造、TypedKey レコード、Registry ConcurrentHashMap |
