@@ -187,10 +187,10 @@ flowchart TD
 
 ## 1.0 残タスク
 
-> CI バッジは未設置。以下は 1.0 向けに記録。
+> CI は設定済み（`.github/workflows/ci.yml`、push/PR ごとに `mvn verify`）。以下は 1.0 向けに未完の項目。
 
-- [ ] GitHub Actions ワークフロー（push/PR で `mvn verify`）
-- [ ] README の CI バッジ
+- [x] GitHub Actions ワークフロー（push/PR で `mvn verify`）
+- [x] README の CI バッジ
 - [ ] Javadoc サイト（GitHub Pages）
 - [ ] `PropStack.defaultSources()` を安定 API としてドキュメント化
 - [ ] 検討: 全ソースを表示する `trace()` オプション（最初のマッチで停止しない）

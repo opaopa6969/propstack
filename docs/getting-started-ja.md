@@ -33,7 +33,7 @@ implementation 'org.unlaxer:propstack:0.9.2'
 
 最新バージョン: [![Maven Central](https://img.shields.io/maven-central/v/org.unlaxer/propstack)](https://central.sonatype.com/artifact/org.unlaxer/propstack)
 
-> 注意: CI バッジは未設置。[architecture-ja.md — 1.0 残タスク](architecture-ja.md#10-残タスク) を参照。
+CI: [![CI](https://github.com/opaopa6969/propstack/actions/workflows/ci.yml/badge.svg)](https://github.com/opaopa6969/propstack/actions/workflows/ci.yml)
 
 ---
 

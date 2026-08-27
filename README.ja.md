@@ -1,5 +1,6 @@
 # PropStack
 
+[![CI](https://github.com/opaopa6969/propstack/actions/workflows/ci.yml/badge.svg)](https://github.com/opaopa6969/propstack/actions/workflows/ci.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/org.unlaxer/propstack)](https://central.sonatype.com/artifact/org.unlaxer/propstack)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Java 21+](https://img.shields.io/badge/Java-21%2B-blue)](https://openjdk.org/)
@@ -416,9 +417,9 @@ flowchart TD
 | [API クックブック](docs/api-cookbook-ja.md) | 全メソッドの使用例 (trace, fromPath, defaultsTo, describedAs, validate) |
 | [アーキテクチャ](docs/architecture-ja.md) | List\<PropertySource\> スタック構造、TypedKey レコード、Registry ConcurrentHashMap |
 | [設計判断](docs/design-decisions.ja.md) | DD-001〜DD-008 と根拠 |
-| [1.0 残タスク](docs/decisions/DD-009-1.0-remaining-tasks.md) | CI バッジ、Javadoc サイト、未解決 API 課題 |
+| [1.0 残タスク](docs/decisions/DD-009-1.0-remaining-tasks.md) | Javadoc サイト、未解決 API 課題 |
 
-> **注意:** CI バッジは未設置。[DD-009](docs/decisions/DD-009-1.0-remaining-tasks.md) を参照。
+> CI は設定済み（`.github/workflows/ci.yml`、push/PR ごとに `mvn verify`）。上記バッジを参照。
 
 ## 設計判断
 

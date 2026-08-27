@@ -1463,8 +1463,8 @@ HOST(TypedKey.string("DB_HOST").defaultsTo("localhost"))           // 本番安�
 
 #### CI / ビルド
 
-- **GitHub Actions ワークフロー**: `mvn verify` を push/PR ごとに実行。現時点では自動ビルドなし。
-- **CI バッジ**: ワークフロー未設定のため README に追加未完了。
+- **GitHub Actions ワークフロー**: `mvn verify` を push/PR ごとに実行。`.github/workflows/ci.yml` で設定済み。
+- **CI バッジ**: `README.md` および `README.ja.md` に追加済み。
 
 #### ドキュメント
 

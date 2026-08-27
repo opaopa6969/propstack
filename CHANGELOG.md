@@ -6,6 +6,9 @@ Published to Maven Central as `org.unlaxer:propstack`.
 
 ## [Unreleased]
 
+### Added
+- CI badge in `README.md` and `README.ja.md` (GitHub Actions workflow configured at `.github/workflows/ci.yml`)
+
 ### Planned post-1.0
 - Javadoc site deployment to GitHub Pages
 - JaCoCo coverage integration (target ≥ 80%)
