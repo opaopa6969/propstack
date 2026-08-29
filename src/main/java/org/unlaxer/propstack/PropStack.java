@@ -341,8 +341,22 @@ public class PropStack implements PropertySource {
      * //   [3] ~/.volta/app.props  → localhost
      * //   [4] classpath app.props → localhost
      * </pre>
+     *
+     * <p><b>Secret masking:</b> This overload cannot know whether the key is
+     * sensitive, so the resolved value is printed as-is. When tracing via a
+     * {@link KeyHolder} whose {@link TypedKey} is marked {@code .secret()},
+     * use {@link #trace(KeyHolder)} instead — it masks the value as
+     * {@code ******} to avoid leaking secrets into logs.</p>
      */
     public String trace(String key) {
+        return trace(key, false);
+    }
+
+    /**
+     * Trace with optional secret masking. When {@code mask} is true the
+     * resolved value is replaced by {@code ******} in the output.
+     */
+    private String trace(String key, boolean mask) {
         StringBuilder sb = new StringBuilder();
         sb.append(key).append(":\n");
         for (int i = 0; i < sources.size(); i++) {
@@ -352,7 +366,17 @@ public class PropStack implements PropertySource {
             if (sourceName == null || sourceName.contains("$$")) {
                 sourceName = "source[" + i + "]";
             }
-            String val = value.map(v -> v.isEmpty() ? "(blank)" : v).orElse("(empty)");
+            String val;
+            if (value.isPresent()) {
+                if (mask) {
+                    val = "******";
+                } else {
+                    String raw = value.get();
+                    val = raw.isEmpty() ? "(blank)" : raw;
+                }
+            } else {
+                val = "(empty)";
+            }
             String marker = value.isPresent() ? "  ← MATCH" : "";
             sb.append(String.format("  [%d] %-25s → %s%s%n", i, sourceName, val, marker));
             if (value.isPresent()) break;
@@ -361,11 +385,16 @@ public class PropStack implements PropertySource {
     }
 
     public String trace(PropertyKey key) {
-        return trace(key.key());
+        return trace(key.key(), false);
     }
 
+    /**
+     * Trace a key resolved from a {@link KeyHolder}. When the holder's
+     * {@link TypedKey} is marked {@code .secret()}, the resolved value is
+     * masked as {@code ******} so secrets do not leak into diagnostic logs.
+     */
     public String trace(KeyHolder holder) {
-        return trace(holder.typedKey().key());
+        return trace(holder.typedKey().key(), holder.typedKey().sensitive());
     }
 
     /**
@@ -403,7 +432,7 @@ public class PropStack implements PropertySource {
         for (Class<? extends KeyHolder> clazz : keyHolderClasses) {
             if (!clazz.isEnum()) continue;
             for (KeyHolder holder : clazz.getEnumConstants()) {
-                results.add(trace(holder.typedKey().key()));
+                results.add(trace(holder.typedKey().key(), holder.typedKey().sensitive()));
             }
         }
         return results;

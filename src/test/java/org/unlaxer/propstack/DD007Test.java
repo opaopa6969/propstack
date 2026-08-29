@@ -141,4 +141,72 @@ class DD007Test {
         long matchCount = trace.lines().filter(l -> l.contains("MATCH")).count();
         assertEquals(1, matchCount, trace);
     }
+
+    // ---- trace() secret masking ----
+
+    /**
+     * Regression: trace(KeyHolder) must mask values whose TypedKey is marked
+     * .secret(), so secrets do not leak into diagnostic logs. Previously
+     * trace() printed the raw value regardless of the sensitive flag.
+     */
+    @Test
+    void traceKeyHolderMasksSecretValue() {
+        PropStack props = new PropStack(false,
+                PropertySource.of(Map.of("SMTP_PASSWORD", "super-secret-value"))
+        );
+        String trace = props.trace(Smtp.PASSWORD);
+        assertTrue(trace.contains("SMTP_PASSWORD:"), trace);
+        assertTrue(trace.contains("MATCH"), trace);
+        assertTrue(trace.contains("******"), "secret should be masked: " + trace);
+        assertFalse(trace.contains("super-secret-value"),
+                "secret value must NOT appear in trace output: " + trace);
+    }
+
+    /**
+     * Non-secret KeyHolder values are still shown in plain via trace(KeyHolder).
+     */
+    @Test
+    void traceKeyHolderShowsNonSecretValue() {
+        PropStack props = new PropStack(false,
+                PropertySource.of(Map.of("SMTP_HOST", "smtp.gmail.com"))
+        );
+        String trace = props.trace(Smtp.HOST);
+        assertTrue(trace.contains("smtp.gmail.com"), trace);
+        assertFalse(trace.contains("******"), trace);
+    }
+
+    /**
+     * trace(String) cannot know whether the key is sensitive, so it returns
+     * the raw value. This is the documented contract — callers who need
+     * masking must use trace(KeyHolder).
+     */
+    @Test
+    void traceStringDoesNotMaskEvenForSecretKeyName() {
+        PropStack props = new PropStack(false,
+                PropertySource.of(Map.of("SMTP_PASSWORD", "super-secret-value"))
+        );
+        String trace = props.trace("SMTP_PASSWORD");
+        // raw trace(String) has no sensitivity info → value is shown
+        assertTrue(trace.contains("super-secret-value"), trace);
+    }
+
+    /**
+     * traceAll(Class<? extends KeyHolder>) must mask sensitive keys.
+     */
+    @Test
+    void traceAllKeyHolderClassMasksSecrets() {
+        PropStack props = new PropStack(false,
+                PropertySource.of(Map.of(
+                        "SMTP_HOST", "smtp.gmail.com",
+                        "SMTP_PASSWORD", "super-secret-value"))
+        );
+        List<String> traces = props.traceAll(Smtp.class);
+        String combined = String.join("", traces);
+        assertFalse(combined.contains("super-secret-value"),
+                "secret must not leak via traceAll(Class): " + combined);
+        assertTrue(combined.contains("******"),
+                "secret should be masked in traceAll(Class): " + combined);
+        assertTrue(combined.contains("smtp.gmail.com"),
+                "non-secret value should appear: " + combined);
+    }
 }
