@@ -124,7 +124,7 @@ public class PropStack implements PropertySource {
     @Override
     public Optional<String> getRawValue(String key) {
         for (PropertySource source : sources) {
-            Optional<String> value = source.get(key);
+            Optional<String> value = source.getRawValue(key);
             if (value.isPresent()) return value;
         }
         return Optional.empty();
@@ -156,7 +156,7 @@ public class PropStack implements PropertySource {
     // ---- Convenience methods ----
 
     public String get(String key, String defaultValue) {
-        return get(key).orElse(defaultValue);
+        return get(key).filter(s -> !s.isBlank()).orElse(defaultValue);
     }
 
     public int getInt(String key, int defaultValue) {

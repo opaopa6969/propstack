@@ -36,9 +36,8 @@ public record TypedKey<T>(String key, Class<T> type, T defaultValue, String desc
 
     // ---- Builder-style methods ----
 
-    @SuppressWarnings("unchecked")
-    public <V> TypedKey<V> defaultsTo(V value) {
-        return new TypedKey<>(key, (Class<V>) value.getClass(), value, description, sensitive);
+    public TypedKey<T> defaultsTo(T value) {
+        return new TypedKey<>(key, type, value, description, sensitive);
     }
 
     public TypedKey<T> describedAs(String desc) {
