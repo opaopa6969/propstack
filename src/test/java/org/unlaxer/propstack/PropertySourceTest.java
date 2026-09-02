@@ -101,6 +101,14 @@ class PropertySourceTest {
         assertTrue(source.get("ANYTHING").isEmpty());
     }
 
+    @Test
+    void forProfileRejectsPathTraversal() {
+        assertThrows(IllegalArgumentException.class,
+                () -> PropertySource.forProfile("../outside", "prod"));
+        assertThrows(IllegalArgumentException.class,
+                () -> PropertySource.forProfile("testapp", "../../../outside"));
+    }
+
     // ---- of(Properties) ----
 
     @Test

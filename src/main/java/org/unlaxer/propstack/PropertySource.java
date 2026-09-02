@@ -189,6 +189,27 @@ public interface PropertySource {
     // ---- Profile-based ----
 
     /**
+     * Resolve a user-home configuration path while keeping it below user.home.
+     * The normalized check prevents appName or profile from escaping via "..".
+     */
+    private static Path userHomeConfigPath(String appName, String fileName) {
+        validatePathComponent(appName, "appName");
+        Path home = Path.of(System.getProperty("user.home")).toAbsolutePath().normalize();
+        Path path = home.resolve("." + appName).resolve(fileName).normalize();
+        if (!path.startsWith(home)) {
+            throw new IllegalArgumentException("Configuration path must remain below user.home: "
+                    + appName);
+        }
+        return path;
+    }
+
+    private static void validatePathComponent(String value, String name) {
+        if (value.contains("..") || value.contains("/") || value.contains("\\")) {
+            throw new IllegalArgumentException(name + " must be a single safe path component: " + value);
+        }
+    }
+
+    /**
      * Load {@code application.{profile}.properties} from classpath.
      * <pre>
      * PropertySource.forProfile("prod")
@@ -203,8 +224,8 @@ public interface PropertySource {
      * Load {@code application.{profile}.properties} from user home.
      */
     static PropertySource forProfile(String appName, String profile) {
-        return fromPath(Path.of(System.getProperty("user.home"),
-                "." + appName, "application." + profile + ".properties"));
+        validatePathComponent(profile, "profile");
+        return fromPath(userHomeConfigPath(appName, "application." + profile + ".properties"));
     }
 
     // ---- Auto-detect profiles ----
