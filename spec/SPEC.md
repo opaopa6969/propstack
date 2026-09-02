@@ -388,7 +388,7 @@ public Optional<String> getRawValue(String key) {
 
 ### 5.3 型変換
 
-`PropStack.convert(String value, Class<?> type)` が文字列から指定型への変換を担う:
+`PropStack.convert(String value, Class<?> type, String key)` が文字列から指定型への変換を担う。数値型の変換に失敗した場合は、キーと値を含む `IllegalStateException` を元の `NumberFormatException` を cause としてスローする:
 
 | 型 | 変換ロジック |
 |----|------------|
@@ -1042,7 +1042,7 @@ private static final Map<String, Object> instances = new ConcurrentHashMap<>();
 | `fromClasspath()` でリソースが見つからない | サイレントスキップ |
 | `require()` でキーが見つからない | `IllegalStateException` スロー |
 | `validate()` で必須キーが欠如 | `IllegalStateException` スロー（全欠如キーを一括報告） |
-| `getInt()` 等で値が数値変換不可 | `NumberFormatException` スロー（ユーザー側での try-catch 推奨） |
+| `getInt()` 等で値が数値変換不可 | `IllegalStateException` スロー（キー・値をメッセージに含む。元の `NumberFormatException` を cause とする） |
 | `Registry.get(Class)` でデフォルトコンストラクタなし | `RuntimeException` でラップしてスロー |
 
 ### 11.5 イミュータビリティ
@@ -1725,7 +1725,7 @@ String host = props.get(Db.HOST);  // TypedKey 経由で型安全
 | `IllegalStateException` | `require(String)` | `Required property missing: KEY` | キーが全ソースに存在しない |
 | `IllegalStateException` | `require(TypedKey)` | `Required property missing: KEY` | キーが全ソースに存在せず `defaultValue == null` |
 | `IllegalStateException` | `validate()` | `Missing required properties: [KEY1, KEY2]` | 一つ以上の必須キーが欠如 |
-| `NumberFormatException` | `getInt()`, `getLong()`, `getDouble()` | （Java 標準） | 値が数値変換不可 |
+| `IllegalStateException` | `getInt()`, `getLong()`, `getDouble()`, `get(TypedKey)` | `Invalid numeric value for KEY: VALUE` | 値が数値変換不可（cause: `NumberFormatException`） |
 | `RuntimeException` | `Registry.get(Class)` | `Cannot instantiate com.example.Foo` | no-arg コンストラクタなし / アクセス不可 |
 | `UnsupportedOperationException` | （カスタム実装） | （実装依存） | 読み取り専用ソースへの `set()` |
 

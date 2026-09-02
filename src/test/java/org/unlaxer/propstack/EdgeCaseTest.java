@@ -21,14 +21,33 @@ class EdgeCaseTest {
         System.clearProperty("CIRC_B");
     }
 
-    // ---- getInt throws NumberFormatException on non-numeric (SPEC §11.4 / Appendix D) ----
+    // ---- numeric getters identify invalid values (SPEC §11.4 / Appendix D) ----
 
     @Test
-    void getIntThrowsNumberFormatExceptionOnNonNumericValue() {
+    void getIntThrowsHelpfulErrorOnNonNumericValue() {
         PropStack props = new PropStack(false,
                 PropertySource.of(Map.of("MY_PORT", "abc"))
         );
-        assertThrows(NumberFormatException.class, () -> props.getInt("MY_PORT", 8080));
+        var ex = assertThrows(IllegalStateException.class, () -> props.getInt("MY_PORT", 8080));
+        assertEquals("Invalid numeric value for MY_PORT: abc", ex.getMessage());
+        assertInstanceOf(NumberFormatException.class, ex.getCause());
+    }
+
+    @Test
+    void otherNumericGettersAlsoIdentifyInvalidValues() {
+        PropStack props = new PropStack(false,
+                PropertySource.of(Map.of("TIMEOUT", "nope", "RATE", "bad"))
+        );
+
+        var longException = assertThrows(IllegalStateException.class,
+                () -> props.getLong("TIMEOUT", 5000L));
+        assertEquals("Invalid numeric value for TIMEOUT: nope", longException.getMessage());
+        assertInstanceOf(NumberFormatException.class, longException.getCause());
+
+        var doubleException = assertThrows(IllegalStateException.class,
+                () -> props.getDouble("RATE", 1.0));
+        assertEquals("Invalid numeric value for RATE: bad", doubleException.getMessage());
+        assertInstanceOf(NumberFormatException.class, doubleException.getCause());
     }
 
     // ---- fromPath with missing file returns empty source (SPEC §11.4: NoSuchFileException is silent) ----
