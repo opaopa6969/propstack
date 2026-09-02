@@ -70,7 +70,7 @@ public class PropStack implements PropertySource {
         if (appName != null && !appName.isEmpty()) {
             // insert home dir source before classpath (last position - 1)
             this.sources.add(this.sources.size() - 1, PropertySource.fromPath(
-                    Path.of(System.getProperty("user.home"), "." + appName, "application.properties")));
+                    userHomeConfigPath(appName)));
         }
     }
 
@@ -115,10 +115,19 @@ public class PropStack implements PropertySource {
                 PropertySource.environmentVariables()));
         if (appName != null && !appName.isEmpty()) {
             list.add(PropertySource.fromPath(
-                    Path.of(System.getProperty("user.home"), "." + appName, "application.properties")));
+                    userHomeConfigPath(appName)));
         }
         list.add(PropertySource.fromClasspath("application.properties"));
         return list;
+    }
+
+    private static Path userHomeConfigPath(String appName) {
+        Path home = Path.of(System.getProperty("user.home")).toAbsolutePath().normalize();
+        Path path = home.resolve("." + appName).resolve("application.properties").normalize();
+        if (!path.startsWith(home)) {
+            throw new IllegalArgumentException("Configuration path must remain below user.home: " + appName);
+        }
+        return path;
     }
 
     @Override

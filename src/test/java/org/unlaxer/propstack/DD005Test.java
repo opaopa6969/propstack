@@ -100,6 +100,12 @@ class DD005Test {
     }
 
     @Test
+    void appNameTraversalIsRejected() {
+        assertThrows(IllegalArgumentException.class, () -> new PropStack("../../outside"));
+        assertThrows(IllegalArgumentException.class, () -> PropStack.defaultSources("../../outside"));
+    }
+
+    @Test
     void defaultSourcesWithInjection() {
         var sources = PropStack.defaultSources("test");
         sources.add(0, PropertySource.of(java.util.Map.of("CUSTOM_KEY", "injected")));
