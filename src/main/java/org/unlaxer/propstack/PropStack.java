@@ -172,7 +172,7 @@ public class PropStack implements PropertySource {
     }
 
     public int getInt(String key, int defaultValue) {
-        return get(key).filter(s -> !s.isBlank()).map(Integer::parseInt).orElse(defaultValue);
+        return get(key).filter(s -> !s.isBlank()).map(s -> parseInt(key, s)).orElse(defaultValue);
     }
 
     public boolean getBoolean(String key, boolean defaultValue) {
@@ -180,11 +180,11 @@ public class PropStack implements PropertySource {
     }
 
     public long getLong(String key, long defaultValue) {
-        return get(key).filter(s -> !s.isBlank()).map(Long::parseLong).orElse(defaultValue);
+        return get(key).filter(s -> !s.isBlank()).map(s -> parseLong(key, s)).orElse(defaultValue);
     }
 
     public double getDouble(String key, double defaultValue) {
-        return get(key).filter(s -> !s.isBlank()).map(Double::parseDouble).orElse(defaultValue);
+        return get(key).filter(s -> !s.isBlank()).map(s -> parseDouble(key, s)).orElse(defaultValue);
     }
 
     public String require(String key) {
@@ -230,7 +230,7 @@ public class PropStack implements PropertySource {
     public <T> T get(TypedKey<T> key) {
         return get(key.key())
                 .filter(s -> !s.isBlank())
-                .map(s -> (T) convert(s, key.type()))
+                .map(s -> (T) convert(s, key.type(), key.key()))
                 .orElse(key.defaultValue());
     }
 
@@ -453,12 +453,12 @@ public class PropStack implements PropertySource {
     // ---- convert ----
 
     @SuppressWarnings("unchecked")
-    private static Object convert(String value, Class<?> type) {
+    private static Object convert(String value, Class<?> type, String key) {
         if (type == String.class) return value;
-        if (type == Integer.class || type == int.class) return Integer.parseInt(value);
+        if (type == Integer.class || type == int.class) return parseInt(key, value);
         if (type == Boolean.class || type == boolean.class) return Boolean.parseBoolean(value);
-        if (type == Long.class || type == long.class) return Long.parseLong(value);
-        if (type == Double.class || type == double.class) return Double.parseDouble(value);
+        if (type == Long.class || type == long.class) return parseLong(key, value);
+        if (type == Double.class || type == double.class) return parseDouble(key, value);
         if (type == List.class) {
             return Arrays.stream(value.split(","))
                     .map(String::trim)
@@ -466,5 +466,34 @@ public class PropStack implements PropertySource {
                     .toList();
         }
         return value;
+    }
+
+    private static int parseInt(String key, String value) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw invalidNumericValue(key, value, e);
+        }
+    }
+
+    private static long parseLong(String key, String value) {
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            throw invalidNumericValue(key, value, e);
+        }
+    }
+
+    private static double parseDouble(String key, String value) {
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException e) {
+            throw invalidNumericValue(key, value, e);
+        }
+    }
+
+    private static IllegalStateException invalidNumericValue(String key, String value,
+                                                               NumberFormatException cause) {
+        return new IllegalStateException("Invalid numeric value for " + key + ": " + value, cause);
     }
 }
