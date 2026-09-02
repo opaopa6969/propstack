@@ -101,7 +101,7 @@ class DD005Test {
 
     @Test
     void appNameTraversalIsRejected() {
-        assertThrows(IllegalArgumentException.class, () -> new PropStack("../../outside"));
+        assertThrows(IllegalArgumentException.class, () -> new PropStack("../outside"));
         assertThrows(IllegalArgumentException.class, () -> PropStack.defaultSources("../../outside"));
     }
 

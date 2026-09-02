@@ -193,6 +193,7 @@ public interface PropertySource {
      * The normalized check prevents appName or profile from escaping via "..".
      */
     private static Path userHomeConfigPath(String appName, String fileName) {
+        validatePathComponent(appName, "appName");
         Path home = Path.of(System.getProperty("user.home")).toAbsolutePath().normalize();
         Path path = home.resolve("." + appName).resolve(fileName).normalize();
         if (!path.startsWith(home)) {
@@ -200,6 +201,12 @@ public interface PropertySource {
                     + appName);
         }
         return path;
+    }
+
+    private static void validatePathComponent(String value, String name) {
+        if (value.contains("..") || value.contains("/") || value.contains("\\")) {
+            throw new IllegalArgumentException(name + " must be a single safe path component: " + value);
+        }
     }
 
     /**
@@ -217,6 +224,7 @@ public interface PropertySource {
      * Load {@code application.{profile}.properties} from user home.
      */
     static PropertySource forProfile(String appName, String profile) {
+        validatePathComponent(profile, "profile");
         return fromPath(userHomeConfigPath(appName, "application." + profile + ".properties"));
     }
 

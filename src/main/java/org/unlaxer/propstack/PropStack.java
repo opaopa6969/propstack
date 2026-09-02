@@ -122,6 +122,9 @@ public class PropStack implements PropertySource {
     }
 
     private static Path userHomeConfigPath(String appName) {
+        if (appName.contains("..") || appName.contains("/") || appName.contains("\\")) {
+            throw new IllegalArgumentException("appName must be a single safe path component: " + appName);
+        }
         Path home = Path.of(System.getProperty("user.home")).toAbsolutePath().normalize();
         Path path = home.resolve("." + appName).resolve("application.properties").normalize();
         if (!path.startsWith(home)) {
